@@ -1,19 +1,26 @@
 package detection;
 
+import db.Database;
+
+import javax.xml.crypto.Data;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 
 public class Program {
     public static void main(String[] args) {
+        Database db = new Database();
+        db.addProcess("msedge.exe",0);
         String pname = "msedge.exe";
 
         boolean processRunning;
         while(true) {
             System.out.println("Checking process " + pname);
             processRunning = isProcessRunning(pname);
-            if (processRunning) {
-                terminateProcess(pname);
+            long sysTime = System.nanoTime();
+            if (processRunning && sysTime % 2 == 0) {
+                db.updateTime(1);
+                //terminateProcess(pname);
             }
             try {
                 Thread.sleep(2000);
