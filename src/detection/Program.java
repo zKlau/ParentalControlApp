@@ -12,7 +12,7 @@ public class Program {
         Database db = new Database();
         db.addProcess("msedge.exe",0);
         String pname = "msedge.exe";
-
+        db.setTimeLimit(1,50);
         boolean processRunning;
         while(true) {
             System.out.println("Checking process " + pname);
@@ -20,8 +20,11 @@ public class Program {
             long sysTime = System.nanoTime();
             if (processRunning && sysTime % 2 == 0) {
                 db.updateTime(1);
-                //terminateProcess(pname);
+                if(db.getTime(1) > db.getTimeLimit(1)) {
+                    terminateProcess(pname);
+                }
             }
+
             try {
                 Thread.sleep(2000);
             } catch (InterruptedException e) {

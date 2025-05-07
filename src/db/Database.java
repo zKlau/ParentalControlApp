@@ -62,4 +62,51 @@ public class Database {
         }
     }
 
+    public void setTimeLimit(int process_id, int time_limit) {
+        try {
+            PreparedStatement checkQuery = con.prepareStatement("Select * from Timelimits  WHERE PROCESS_ID= "+ process_id);
+            ResultSet rs = checkQuery.executeQuery();
+            if (rs.next()) {
+                PreparedStatement insertQuery = con.prepareStatement ("UPDATE Timelimits SET TIME_LIMIT = "+time_limit + " WHERE PROCESS_ID="+process_id);
+                ResultSet iqs = insertQuery.executeQuery();
+                return;
+            }
+            System.out.println("Process timelimit doesnt exist");
+            PreparedStatement insertQuery = con.prepareStatement ("INSERT INTO Timelimits (PROCESS_ID, TIME_LIMIT) VALUES ("+process_id+","+time_limit+")");
+            ResultSet iqs = insertQuery.executeQuery();
+            System.out.println("Time limit added for PID " + process_id);
+
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    public int getTimeLimit(int process_id) {
+        try {
+            PreparedStatement checkQuery = con.prepareStatement("Select * from Timelimits  WHERE PROCESS_ID= "+ process_id);
+            ResultSet rs = checkQuery.executeQuery();
+            if(rs.next()) {
+                return rs.getInt("TIME_LIMIT");
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+
+        return 0;
+    }
+
+    public int getTime(int process_id) {
+        try {
+            PreparedStatement checkQuery = con.prepareStatement("Select * from Processes WHERE ID= "+ process_id);
+            ResultSet rs = checkQuery.executeQuery();
+            if(rs.next()) {
+                return rs.getInt("TOTAL_TIME");
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+
+        return 0;
+    }
+
 }
