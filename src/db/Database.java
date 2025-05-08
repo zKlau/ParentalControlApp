@@ -112,4 +112,16 @@ public class Database {
         return 0;
     }
 
+    public void removeProcess(int process_id) {
+        try {
+            PreparedStatement checkQuery = con.prepareStatement("DELETE FROM Processes WHERE ID="+process_id);
+            ResultSet rs = checkQuery.executeQuery();
+
+            PreparedStatement checkQuery2 = con.prepareStatement("DELETE FROM TimeLimits WHERE PROCESS_ID="+process_id);
+            ResultSet rs2 = checkQuery.executeQuery();
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
 }
