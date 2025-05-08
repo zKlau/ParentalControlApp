@@ -1,7 +1,4 @@
 package db;
-
-import javax.xml.crypto.Data;
-import javax.xml.transform.Result;
 import java.sql.*;
 
 public class Database {
@@ -10,29 +7,35 @@ public class Database {
 
     public Database() {
         try {
-            con = null;
-            String url = "jdbc:mariadb://localhost:3306/parentalcontrolapp";
-            String user = "root";
-            String pwd = "";
+            con = DriverManager.getConnection("jdbc:sqlite:data.db");
 
-            con = DriverManager.getConnection(url, user, pwd);
-            stm = con.createStatement();
+            // Create tables
+            Statement stm = con.createStatement();
+            stm.executeUpdate("""
+                CREATE TABLE IF NOT EXISTS Users (
+                    ID INTEGER PRIMARY KEY AUTOINCREMENT,
+                    NAME TEXT NOT NULL,
+                    IP TEXT NOT NULL
+                );
+                CREATE TABLE IF NOT EXISTS Processes (
+                    ID INTEGER PRIMARY KEY AUTOINCREMENT,
+                    USER_ID INTEGER NOT NULL,
+                    PROCESS_NAME TEXT NOT NULL,
+                    TOTAL_TIME INTEGER NOT NULL DEFAULT 0,
+                    FOREIGN KEY (USER_ID) REFERENCES Users(ID)
+                );
+                CREATE TABLE IF NOT EXISTS TimeLimits (
+                    ID INTEGER PRIMARY KEY AUTOINCREMENT,
+                    PROCESS_ID INTEGER NOT NULL,
+                    TIME_LIMIT INTEGER NOT NULL,
+                    FOREIGN KEY (PROCESS_ID) REFERENCES Processes(ID)
+                );
+            """);
+            System.out.println("Database successfully created");
         } catch (SQLException e) {
             throw new RuntimeException(e);
         }
-        System.out.println("Succesfully connected to database");
-       /* ResultSet rs = stm.executeQuery("Select * from users");
-
-        while (rs.next()) {
-            int id = rs.getInt("id");
-            String username = rs.getString("name");
-            String email = rs.getString("score");
-
-            System.out.println(id + ": " + username + " - " + email);
-        }
-
-
-        */
+        System.out.println("Successfully connected to database");
     }
 
 
@@ -46,7 +49,7 @@ public class Database {
             }
 
             PreparedStatement insertQuery = con.prepareStatement ("INSERT INTO Processes (USER_ID,PROCESS_NAME,TOTAL_TIME) VALUES ("+user_id+",'"+name+"',0)");
-            ResultSet iqs = insertQuery.executeQuery();
+            insertQuery.executeUpdate();
             System.out.println("Process added: " + name);
         } catch (SQLException e) {
             throw new RuntimeException(e);
@@ -56,7 +59,7 @@ public class Database {
     public void updateTime(int process_id) {
         try {
             PreparedStatement checkQuery = con.prepareStatement("UPDATE Processes SET TOTAL_TIME=TOTAL_TIME+2 WHERE ID = "+process_id);
-            ResultSet rs = checkQuery.executeQuery();
+            checkQuery.executeUpdate();
         } catch (SQLException e) {
             throw new RuntimeException(e);
         }
@@ -68,12 +71,12 @@ public class Database {
             ResultSet rs = checkQuery.executeQuery();
             if (rs.next()) {
                 PreparedStatement insertQuery = con.prepareStatement ("UPDATE Timelimits SET TIME_LIMIT = "+time_limit + " WHERE PROCESS_ID="+process_id);
-                ResultSet iqs = insertQuery.executeQuery();
+                insertQuery.executeUpdate();
                 return;
             }
             System.out.println("Process timelimit doesnt exist");
             PreparedStatement insertQuery = con.prepareStatement ("INSERT INTO Timelimits (PROCESS_ID, TIME_LIMIT) VALUES ("+process_id+","+time_limit+")");
-            ResultSet iqs = insertQuery.executeQuery();
+            insertQuery.executeUpdate();
             System.out.println("Time limit added for PID " + process_id);
 
         } catch (SQLException e) {
