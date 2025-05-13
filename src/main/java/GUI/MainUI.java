@@ -1,7 +1,10 @@
 package GUI;
 
+import detection.Program;
 import javafx.application.Application;
 import javafx.stage.Stage;
+
+import java.nio.file.spi.FileTypeDetector;
 
 public class MainUI extends Application {
     @Override
@@ -11,6 +14,9 @@ public class MainUI extends Application {
     }
 
     public static void main(String[] args) {
+        Program p = new Program();
         launch();
+
+
     }
 }

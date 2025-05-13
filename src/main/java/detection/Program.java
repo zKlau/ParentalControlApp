@@ -8,7 +8,8 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 
 public class Program {
-    public static void main(String[] args) {
+
+    public Program() {
         Database db = new Database();
         db.addProcess("msedge.exe",0);
         String pname = "msedge.exe";
