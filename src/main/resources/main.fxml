@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.shape.*?>
+
+<AnchorPane prefHeight="400.0" prefWidth="600.0" xmlns="http://javafx.com/javafx/17.0.12" xmlns:fx="http://javafx.com/fxml/1" fx:controller="GUI.MainUI">
+   <children>
+      <Rectangle arcHeight="5.0" arcWidth="5.0" fill="#1f93ff00" height="294.0" layoutX="27.0" layoutY="60.0" stroke="BLACK" strokeType="INSIDE" width="389.0" />
+      <Button layoutX="27.0" layoutY="361.0" mnemonicParsing="false" text="Add Process" />
+      <MenuButton layoutX="439.0" layoutY="58.0" mnemonicParsing="false" text="Users">
+        <items>
+          <MenuItem mnemonicParsing="false" text="Action 1" />
+          <MenuItem mnemonicParsing="false" text="Action 2" />
+        </items>
+      </MenuButton>
+      <Label layoutX="439.0" layoutY="35.0" text="Select User" />
+      <ListView layoutX="27.0" layoutY="60.0" prefHeight="294.0" prefWidth="389.0" />
+      <TextArea layoutX="439.0" layoutY="95.0" prefHeight="36.0" prefWidth="148.0" promptText="User's name" />
+      <Button layoutX="474.0" layoutY="150.0" mnemonicParsing="false" text="Create User" />
+      <Label layoutX="27.0" layoutY="35.0" text="Processes" />
+      <Label layoutX="7.0" layoutY="6.0" text="ADMIN" />
+   </children>
+</AnchorPane>
