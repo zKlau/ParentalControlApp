@@ -6,32 +6,39 @@ import javax.xml.crypto.Data;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.util.Timer;
+import java.util.TimerTask;
 
 public class Program {
+    public Database db = Database.getInstance();
+    public boolean allow_connection = true;
+
+    public Timer timer;
+
 
     public Program() {
-        Database db = new Database();
-        db.addProcess("msedge.exe",0);
-        String pname = "msedge.exe";
-        db.setTimeLimit(1,50);
-        boolean processRunning;
-        while(true) {
-            System.out.println("Checking process " + pname);
-            processRunning = isProcessRunning(pname);
-            long sysTime = System.nanoTime();
-            if (processRunning && sysTime % 2 == 0) {
-                db.updateTime(1);
-                if(db.getTime(1) > db.getTimeLimit(1)) {
-                    terminateProcess(pname);
+        db.addProcess("msedge.exe", 0);
+        db.setTimeLimit(1, 50);
+        Timer timer = new Timer(true);
+
+        timer.scheduleAtFixedRate(new TimerTask() {
+            @Override
+            public void run() {
+                try {
+                    String processName = "msedge.exe";
+                    System.out.println("Checking process " + processName);
+
+                    if (isProcessRunning(processName)) {
+                        db.updateTime(1);
+                        if (db.getTime(1) > db.getTimeLimit(1)) {
+                            terminateProcess(processName);
+                        }
+                    }
+                } catch (Exception e) {
+                    System.err.println("Error during process monitoring: " + e.getMessage());
                 }
             }
-
-            try {
-                Thread.sleep(2000);
-            } catch (InterruptedException e) {
-                throw new RuntimeException(e);
-            }
-        }
+        }, 0, 2000); // Adjusted to run every 2 seconds
     }
 
     public static boolean isProcessRunning(String pname) {
