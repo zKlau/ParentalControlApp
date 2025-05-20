@@ -45,8 +45,8 @@ public class Database {
         dbThread = new Thread(() -> {
             while (true) {
                 try {
-                    Runnable task = taskQueue.take(); // Wait for a task to arrive
-                    task.run(); // Execute the task
+                    Runnable task = taskQueue.take();
+                    task.run();
                 } catch (InterruptedException e) {
                     System.err.println("Database task thread interrupted!");
                     break;

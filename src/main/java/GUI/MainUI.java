@@ -1,21 +1,14 @@
 package GUI;
 
-import detection.Program;
+import Processes.Program;
 import javafx.application.Application;
-import javafx.fxml.FXML;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.fxml.FXMLLoader;
-import javafx.scene.control.ListView;
-import javafx.scene.layout.StackPane;
 import javafx.stage.Stage;
-import javafx.scene.control.Button;
-
-import java.util.ArrayList;
 
 public class MainUI extends Application {
 
-    private static Program program;
     private UI controller;
 
 

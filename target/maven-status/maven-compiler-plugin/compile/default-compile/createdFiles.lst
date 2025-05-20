@@ -1,5 +1,7 @@
-GUI\MainUI.class
-detection\Program$1.class
+Processes\Program$1.class
 GUI\UI.class
-detection\Program.class
+GUI\MainUI.class
+GUI\processEdit.class
 db\Database.class
+GUI\UI$1.class
+Processes\Program.class
