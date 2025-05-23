@@ -1,7 +1,9 @@
-Processes\Program$1.class
-GUI\UI.class
+Processes\ProcessInfo.class
 GUI\MainUI.class
 GUI\processEdit.class
 db\Database.class
 GUI\UI$1.class
+Processes\Program$1.class
+GUI\UI.class
+GUI\CreateUserController.class
 Processes\Program.class

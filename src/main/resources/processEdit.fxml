@@ -1,11 +1,17 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<?import javafx.scene.control.*?>
-<?import javafx.scene.layout.*?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.layout.AnchorPane?>
 
-
-<AnchorPane prefHeight="400.0" prefWidth="600.0" xmlns="http://javafx.com/javafx/17.0.12" xmlns:fx="http://javafx.com/fxml/1" fx:controller="GUI.UI">
+<AnchorPane prefHeight="119.0" prefWidth="574.0" xmlns="http://javafx.com/javafx/23.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="GUI.UI">
    <children>
-      <Button mnemonicParsing="false" text="Button" />
+      <Button id="remove_process" layoutX="46.0" layoutY="84.0" mnemonicParsing="false" onAction="#saveProcess" prefHeight="17.0" prefWidth="96.0" text="Save" />
+      <TextField fx:id="process" layoutX="74.0" layoutY="31.0" />
+      <Label fx:id="processUrl" layoutX="25.0" layoutY="35.0" prefHeight="17.0" prefWidth="41.0" text="URL:" />
+      <TextField layoutX="328.0" layoutY="31.0" />
+      <Label layoutX="250.0" layoutY="35.0" prefHeight="17.0" prefWidth="78.0" text="Time Limit (s):" />
+      <Button id="remove_process" layoutX="393.0" layoutY="84.0" mnemonicParsing="false" onAction="#removeProcess" prefHeight="17.0" prefWidth="96.0" text="Remove" />
    </children>
 </AnchorPane>

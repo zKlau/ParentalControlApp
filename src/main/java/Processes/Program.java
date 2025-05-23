@@ -37,7 +37,7 @@ public class Program {
                     System.err.println("Error during process monitoring: " + e.getMessage());
                 }
             }
-        }, 0, 2000); // Adjusted to run every 2 seconds
+        }, 0, 2000);
     }
 
     public static boolean isProcessRunning(String pname) {
