@@ -1,4 +1,5 @@
 package db;
+import Processes.ProcessInfo;
 import Processes.UserInfo;
 
 import java.sql.*;
@@ -262,15 +263,15 @@ public class Database {
      * @param user_id The ID of the user to query.
      * @return An {@code ArrayList} of process names for the user.
      */
-    public synchronized ArrayList<String> getProcesses(int user_id) {
-        ArrayList<String> resArray = new ArrayList<>();
+    public synchronized ArrayList<ProcessInfo> getProcesses(int user_id) {
+        ArrayList<ProcessInfo> resArray = new ArrayList<>();
         try {
             PreparedStatement checkQuery = con.prepareStatement("SELECT * FROM processes WHERE user_id=?");
             checkQuery.setInt(1, user_id);
             ResultSet rs = checkQuery.executeQuery();
 
             while  (rs.next()) {
-                resArray.add(rs.getString("PROCESS_NAME") + " " + rs.getString("TOTAL_TIME"));
+                resArray.add(new ProcessInfo(rs.getInt("ID"), rs.getInt("USER_ID"), rs.getString("PROCESS_NAME"),rs.getInt("TOTAL_TIME")));
             }
 
         } catch (SQLException e) {

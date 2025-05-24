@@ -1,10 +1,10 @@
 Processes\ProcessInfo.class
 GUI\MainUI.class
-GUI\processEdit.class
 db\Database.class
 GUI\UI$1.class
 Processes\Program$1.class
 GUI\UI.class
 GUI\CreateUserController.class
+GUI\processEditController.class
 Processes\UserInfo.class
 Processes\Program.class

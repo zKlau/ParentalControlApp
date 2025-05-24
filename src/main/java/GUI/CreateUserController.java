@@ -26,7 +26,7 @@ public class CreateUserController {
         String userName = userNameField.getText();
         if (!userName.isBlank() && program != null && program.db.createUser(userName)) {
             if (uiController != null) {
-                uiController.populateUsersMenu(null);
+                uiController.updateMenu();
             }
             Stage stage = (Stage) userNameField.getScene().getWindow();
             stage.close();

@@ -1,5 +1,6 @@
 package GUI;
 
+import Processes.ProcessInfo;
 import Processes.UserInfo;
 import javafx.application.Platform;
 import javafx.fxml.FXML;
@@ -20,7 +21,7 @@ import javafx.stage.Stage;
  * processes and provide options for editing, adding, and removing them.
  */
 public class UI {
-
+    private int current_user = 0;
     /**
      * Reference to the {@code Program} instance that handles backend logic.
      */
@@ -82,9 +83,12 @@ public class UI {
     }
     public void populateProgramList(int user_id) {
 
-        ArrayList<String> prs = program.db.getProcesses(user_id);
-        processes.getItems().setAll(prs);
-
+        ArrayList<ProcessInfo> prs = program.db.getProcesses(user_id);
+        processes.getItems().clear();
+        //processes.getItems().setAll(prs);
+        for (ProcessInfo pr : prs) {
+            processes.getItems().add(pr.getProcess_name());
+        }
         processes.setCellFactory(listView -> new ListCell<>() {
             private final Button btn = new Button("EDIT");
             private final HBox hbox = new HBox(10);
@@ -94,20 +98,7 @@ public class UI {
                 hbox.getChildren().addAll(label, btn);
                 btn.setOnAction(i -> {
                     String item = getItem();
-                    try {
-                        FXMLLoader loader = new FXMLLoader(getClass().getResource("/processEdit.fxml"));
-                        Parent root = loader.load();
-
-                        controller = loader.getController();
-
-                        Scene scene = new Scene(root);
-                        Stage stage = new Stage();
-                        stage.setTitle("Editing " + item);
-                        stage.setScene(scene);
-                        stage.show();
-                    } catch (IOException e) {
-                        throw new RuntimeException(e);
-                    }
+                    processEditMenu(item);
                 });
             };
             @Override
@@ -122,16 +113,43 @@ public class UI {
             }
         });
     }
+    public void processEditMenu(String item) {
+        try {
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/processEdit.fxml"));
+            Parent root = loader.load();
+
+            processEditController controller = loader.getController();
+            controller.print();
+            Scene scene = new Scene(root);
+            Stage stage = new Stage();
+            if (item != null) {
+                stage.setTitle("Editing " + item);
+            } else {
+                stage.setTitle("Creating Process");
+            }
+            stage.setScene(scene);
+            stage.show();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+    public void updateMenu() {
+        populateUsersMenu(null);
+        populateProgramList(current_user);
+    }
     public void populateUsersMenu(ArrayList<UserInfo> users) {
         if (users == null) {
             users = program.db.getUsers();
         }
         selectUsers.getItems().clear();
-
+        int i = 0;
         for (UserInfo user : users) {
             MenuItem item = new MenuItem(user.getName());
             item.setOnAction(e -> {
-                System.out.println("Selected user: " + user);
+                System.out.println("Selected user: " + user.getId());
+                current_user = user.getId()-1;
+                System.out.println(System.getProperty("user.name"));
+                updateMenu();
             });
             selectUsers.getItems().add(item);
         }
@@ -149,37 +167,16 @@ public class UI {
      * Handles the addition of a new process. This method is triggered by a corresponding
      * UI action, such as a button click.
      */
-    @FXML
-    public void saveProcess() {
-        System.out.println("Saving Process");
-    }
 
     /**
      * Handles the removal of a selected process. This method is triggered by a corresponding
      * UI action, such as a button click.
      */
-    @FXML
-    public void removeProcess() {
-        System.out.println("Removing Process");
-    }
+
 
     @FXML
     public void addProcess() {
-        try {
-            FXMLLoader loader = new FXMLLoader(getClass().getResource("/processEdit.fxml"));
-            Parent root = loader.load();
-
-            controller = loader.getController();
-
-            Scene scene = new Scene(root);
-            Stage stage = new Stage();
-            stage.setTitle("Adding Process");
-            stage.setScene(scene);
-            stage.show();
-            System.out.println("Adding Process");
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
+        processEditMenu(null);
     }
 
 

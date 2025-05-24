@@ -11,7 +11,7 @@ import java.util.TimerTask;
 public class Program {
     public Database db = Database.getInstance();
     public boolean allow_connection = true;
-
+    public String system_user = System.getProperty("user.name");
     public Timer timer;
 
 

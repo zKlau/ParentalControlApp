@@ -5,7 +5,7 @@
 <?import javafx.scene.control.TextField?>
 <?import javafx.scene.layout.AnchorPane?>
 
-<AnchorPane prefHeight="119.0" prefWidth="574.0" xmlns="http://javafx.com/javafx/23.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="GUI.UI">
+<AnchorPane prefHeight="119.0" prefWidth="574.0" xmlns="http://javafx.com/javafx/23.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="GUI.processEditController">
    <children>
       <Button id="remove_process" layoutX="46.0" layoutY="84.0" mnemonicParsing="false" onAction="#saveProcess" prefHeight="17.0" prefWidth="96.0" text="Save" />
       <TextField fx:id="process" layoutX="74.0" layoutY="31.0" />
