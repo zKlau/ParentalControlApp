@@ -1,5 +1,6 @@
 package GUI;
 
+import Processes.UserInfo;
 import javafx.application.Platform;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
@@ -35,11 +36,6 @@ public class UI {
      * Reference to the {@code UI} controller for handling actions in the UI.
      */
 
-
-    @FXML
-    private String createUserName;
-
-
     private UI controller;
 
 
@@ -54,83 +50,93 @@ public class UI {
      */
     public void onProgramReady(Program program) {
         this.program = program;
-        ArrayList<String> users = program.db.getUsers();
+        ArrayList<UserInfo> users = program.db.getUsers();
         System.out.println(users.toString());
         if (!users.isEmpty()) {
             populateUsersMenu(users);
             System.out.println("Users not empty");
-            ArrayList<String> prs = program.db.getProcesses(0);
-            System.out.println(prs.toString());
-            processes.getItems().setAll(prs);
-
-            processes.setCellFactory(listView -> new ListCell<>() {
-                private final Button btn = new Button("EDIT");
-                private final HBox hbox = new HBox(10);
-                private final Label label = new Label();
-
-                {
-                    hbox.getChildren().addAll(label, btn);
-                    btn.setOnAction(i -> {
-                        String item = getItem();
-                        try {
-                            FXMLLoader loader = new FXMLLoader(getClass().getResource("/processEdit.fxml"));
-                            Parent root = loader.load();
-
-                            controller = loader.getController();
-
-                            Scene scene = new Scene(root);
-                            Stage stage = new Stage();
-                            stage.setTitle("Editing " + item);
-                            stage.setScene(scene);
-                            stage.show();
-                        } catch (IOException e) {
-                            throw new RuntimeException(e);
-                        }
-                    });
-                }
-
-                @Override
-                protected void updateItem(String item, boolean empty) {
-                    super.updateItem(item, empty);
-                    if (empty || item == null) {
-                        setGraphic(null);
-                    } else {
-                        label.setText(item);
-                        setGraphic(hbox);
-                    }
-                }
-            });
+            populateProgramList(0);
             program.allow_connection = true;
         }  else {
-            Platform.runLater(() -> {
-                try {
-                    FXMLLoader loader = new FXMLLoader(getClass().getResource("/creatingUser.fxml"));
-                    Parent root = loader.load();
-
-                    CreateUserController controllerUser = loader.getController();
-                    controllerUser.setProgram(program);
-                    Scene scene = new Scene(root);
-                    Stage stage = new Stage();
-                    stage.setTitle("Creating User");
-                    stage.setScene(scene);
-                    stage.show();
-                } catch (IOException e) {
-                    throw new RuntimeException(e);
-                }
-            });
+            createUserWindow();
         }
     }
-    public void populateUsersMenu(ArrayList<String> users) {
+    public void createUserWindow() {
+        Platform.runLater(() -> {
+            try {
+                FXMLLoader loader = new FXMLLoader(getClass().getResource("/creatingUser.fxml"));
+                Parent root = loader.load();
+
+                CreateUserController controllerUser = loader.getController();
+                controllerUser.setProgram(program);
+                controllerUser.setUIController(this);
+                Scene scene = new Scene(root);
+                Stage stage = new Stage();
+                stage.setTitle("Creating User");
+                stage.setScene(scene);
+                stage.show();
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+        });
+    }
+    public void populateProgramList(int user_id) {
+
+        ArrayList<String> prs = program.db.getProcesses(user_id);
+        processes.getItems().setAll(prs);
+
+        processes.setCellFactory(listView -> new ListCell<>() {
+            private final Button btn = new Button("EDIT");
+            private final HBox hbox = new HBox(10);
+            private final Label label = new Label();
+
+            {
+                hbox.getChildren().addAll(label, btn);
+                btn.setOnAction(i -> {
+                    String item = getItem();
+                    try {
+                        FXMLLoader loader = new FXMLLoader(getClass().getResource("/processEdit.fxml"));
+                        Parent root = loader.load();
+
+                        controller = loader.getController();
+
+                        Scene scene = new Scene(root);
+                        Stage stage = new Stage();
+                        stage.setTitle("Editing " + item);
+                        stage.setScene(scene);
+                        stage.show();
+                    } catch (IOException e) {
+                        throw new RuntimeException(e);
+                    }
+                });
+            };
+            @Override
+            protected void updateItem(String item, boolean empty) {
+                super.updateItem(item, empty);
+                if (empty || item == null) {
+                    setGraphic(null);
+                } else {
+                    label.setText(item);
+                    setGraphic(hbox);
+                }
+            }
+        });
+    }
+    public void populateUsersMenu(ArrayList<UserInfo> users) {
+        if (users == null) {
+            users = program.db.getUsers();
+        }
         selectUsers.getItems().clear();
 
-        for (String user : users) {
-            MenuItem item = new MenuItem(user);
+        for (UserInfo user : users) {
+            MenuItem item = new MenuItem(user.getName());
             item.setOnAction(e -> {
                 System.out.println("Selected user: " + user);
             });
             selectUsers.getItems().add(item);
         }
     }
+
     /**
      * Called by the JavaFX framework during the FXML loading process. This method is
      * intended for any initialization tasks related to UI components.
@@ -176,14 +182,15 @@ public class UI {
         }
     }
 
-    @FXML
-    private TextField userNameField;
 
     @FXML
     public void createUser() {
-        if (program.db.createUser(userNameField.getText())) {
-            System.out.println("User created");
-        }
-        System.out.println("User already exists");
+        createUserWindow();
+    }
+
+
+    @FXML
+    public void deleteUser() {
+        System.out.println("Deleting user");
     }
 }

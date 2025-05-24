@@ -1,4 +1,6 @@
 package db;
+import Processes.UserInfo;
+
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.concurrent.BlockingQueue;
@@ -277,14 +279,14 @@ public class Database {
         return resArray;
     }
 
-    public ArrayList<String> getUsers() {
-        ArrayList<String> resArray = new ArrayList<>();
+    public ArrayList<UserInfo> getUsers() {
+        ArrayList<UserInfo> resArray = new ArrayList<>();
         try {
             PreparedStatement checkQuery = con.prepareStatement("SELECT * FROM users");
             ResultSet rs = checkQuery.executeQuery();
 
             while  (rs.next()) {
-                resArray.add(rs.getString("ID") + " " + rs.getString("NAME"));
+                resArray.add(new UserInfo(rs.getString("name"),rs.getInt("id")));
             }
         } catch (SQLException e) {
             throw new RuntimeException(e);

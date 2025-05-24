@@ -6,4 +6,5 @@ GUI\UI$1.class
 Processes\Program$1.class
 GUI\UI.class
 GUI\CreateUserController.class
+Processes\UserInfo.class
 Processes\Program.class
