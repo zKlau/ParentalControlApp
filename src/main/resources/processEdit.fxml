@@ -7,11 +7,12 @@
 
 <AnchorPane prefHeight="119.0" prefWidth="574.0" xmlns="http://javafx.com/javafx/23.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="GUI.processEditController">
    <children>
-      <Button id="remove_process" layoutX="46.0" layoutY="84.0" mnemonicParsing="false" onAction="#saveProcess" prefHeight="17.0" prefWidth="96.0" text="Save" />
-      <TextField fx:id="process" layoutX="74.0" layoutY="31.0" />
-      <Label fx:id="processUrl" layoutX="25.0" layoutY="35.0" prefHeight="17.0" prefWidth="41.0" text="URL:" />
-      <TextField layoutX="328.0" layoutY="31.0" />
-      <Label layoutX="250.0" layoutY="35.0" prefHeight="17.0" prefWidth="78.0" text="Time Limit (s):" />
+      <Button id="save_process" layoutX="46.0" layoutY="84.0" mnemonicParsing="false" onAction="#saveProcess" prefHeight="17.0" prefWidth="96.0" text="Save" />
+      <TextField fx:id="processUrl" layoutX="64.0" layoutY="31.0" />
+      <Label layoutX="15.0" layoutY="35.0" prefHeight="17.0" prefWidth="41.0" text="URL:" />
+      <TextField fx:id="time_limit" layoutX="398.0" layoutY="31.0" />
+      <Label layoutX="320.0" layoutY="35.0" prefHeight="17.0" prefWidth="78.0" text="Time Limit (s):" />
       <Button id="remove_process" layoutX="393.0" layoutY="84.0" mnemonicParsing="false" onAction="#removeProcess" prefHeight="17.0" prefWidth="96.0" text="Remove" />
+      <Button layoutX="219.0" layoutY="31.0" mnemonicParsing="false" onAction="#openFileSelection" text="FIle Select" />
    </children>
 </AnchorPane>

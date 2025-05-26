@@ -21,7 +21,7 @@ import javafx.stage.Stage;
  * processes and provide options for editing, adding, and removing them.
  */
 public class UI {
-    private int current_user = 0;
+    
     /**
      * Reference to the {@code Program} instance that handles backend logic.
      */
@@ -31,7 +31,7 @@ public class UI {
      * ListView in the FXML file to display the processes.
      */
     @FXML
-    private ListView<String> processes;
+    private ListView<ProcessInfo> processes;
 
     /**
      * Reference to the {@code UI} controller for handling actions in the UI.
@@ -85,10 +85,8 @@ public class UI {
 
         ArrayList<ProcessInfo> prs = program.db.getProcesses(user_id);
         processes.getItems().clear();
-        //processes.getItems().setAll(prs);
-        for (ProcessInfo pr : prs) {
-            processes.getItems().add(pr.getProcess_name());
-        }
+        processes.getItems().addAll(prs);
+
         processes.setCellFactory(listView -> new ListCell<>() {
             private final Button btn = new Button("EDIT");
             private final HBox hbox = new HBox(10);
@@ -97,23 +95,24 @@ public class UI {
             {
                 hbox.getChildren().addAll(label, btn);
                 btn.setOnAction(i -> {
-                    String item = getItem();
-                    processEditMenu(item);
+                    ProcessInfo proc = getItem();
+                    processEditMenu(proc);
                 });
-            };
+            }
+
             @Override
-            protected void updateItem(String item, boolean empty) {
+            protected void updateItem(ProcessInfo item, boolean empty) {
                 super.updateItem(item, empty);
                 if (empty || item == null) {
                     setGraphic(null);
                 } else {
-                    label.setText(item);
+                    label.setText(item.getProcess_name() + "   TIME OPEN: " + item.getTotal_time());
                     setGraphic(hbox);
                 }
             }
         });
     }
-    public void processEditMenu(String item) {
+    public void processEditMenu(ProcessInfo item) {
         try {
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/processEdit.fxml"));
             Parent root = loader.load();
@@ -122,20 +121,30 @@ public class UI {
             controller.print();
             Scene scene = new Scene(root);
             Stage stage = new Stage();
+
+
             if (item != null) {
-                stage.setTitle("Editing " + item);
+                stage.setTitle("Editing " + item.getProcess_name());
             } else {
+                item = new ProcessInfo();
                 stage.setTitle("Creating Process");
             }
+
+            controller.setProcess(item);
+            controller.setProgram(program);
             stage.setScene(scene);
             stage.show();
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
     }
+    @FXML
+    public void refreshList() {
+        updateMenu();
+    }
     public void updateMenu() {
         populateUsersMenu(null);
-        populateProgramList(current_user);
+        populateProgramList(program.current_user);
     }
     public void populateUsersMenu(ArrayList<UserInfo> users) {
         if (users == null) {
@@ -147,7 +156,7 @@ public class UI {
             MenuItem item = new MenuItem(user.getName());
             item.setOnAction(e -> {
                 System.out.println("Selected user: " + user.getId());
-                current_user = user.getId()-1;
+                program.current_user = user.getId()-1;
                 System.out.println(System.getProperty("user.name"));
                 updateMenu();
             });

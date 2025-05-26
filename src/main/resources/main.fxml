@@ -24,6 +24,7 @@
 
         <Button layoutX="465.0" layoutY="117.0" onAction="#createUser" text="Create User" AnchorPane.rightAnchor="57.0" AnchorPane.topAnchor="117.0" />
       <Button layoutX="465.0" layoutY="164.0" mnemonicParsing="false" onAction="#deleteUser" text="Delete User" />
+      <Button layoutX="333.0" layoutY="31.0" mnemonicParsing="false" onAction="#refreshList" text="Refresh List" />
 
     </children>
 </AnchorPane>

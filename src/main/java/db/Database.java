@@ -115,23 +115,25 @@ public class Database {
      * @param name    The name of the process.
      * @param user_id The ID of the user the process belongs to.
      */
-    public void addProcess(String name, int user_id) {
+    public void addProcess(ProcessInfo prs) {
         executeDatabaseTask(() -> {
             try (PreparedStatement stmt = con.prepareStatement("SELECT 1 FROM Processes WHERE PROCESS_NAME = ?")) {
-                stmt.setString(1, name);
+                stmt.setString(1, prs.getProcess_name());
                 try (ResultSet rs = stmt.executeQuery()) {
                     if (rs.next()) {
                         System.out.println("Process already exists.");
                         return;
                     }
                 }
-
+                if(prs.getTime_limit() != -1) {
+                    setTimeLimit(prs);
+                }
                 try (PreparedStatement insertStmt = con.prepareStatement(
                         "INSERT INTO Processes (USER_ID, PROCESS_NAME, TOTAL_TIME) VALUES (?, ?, 0)")) {
-                    insertStmt.setInt(1, user_id);
-                    insertStmt.setString(2, name);
+                    insertStmt.setInt(1, prs.getUser_id());
+                    insertStmt.setString(2, prs.getProcess_name());
                     insertStmt.executeUpdate();
-                    System.out.println("Process added: " + name);
+                    System.out.println("Process added: " + prs.getProcess_name());
                 }
             } catch (SQLException e) {
                 System.err.println("Error adding process: " + e.getMessage());
@@ -271,7 +273,8 @@ public class Database {
             ResultSet rs = checkQuery.executeQuery();
 
             while  (rs.next()) {
-                resArray.add(new ProcessInfo(rs.getInt("ID"), rs.getInt("USER_ID"), rs.getString("PROCESS_NAME"),rs.getInt("TOTAL_TIME")));
+                int time_limit = getTimeLimit(rs.getInt("ID"));
+                resArray.add(new ProcessInfo(rs.getInt("ID"), rs.getInt("USER_ID"), rs.getString("PROCESS_NAME"),rs.getInt("TOTAL_TIME"), time_limit));
             }
 
         } catch (SQLException e) {
@@ -322,5 +325,26 @@ public class Database {
             return true;
         }
         return false;
+    }
+
+    public void updateProcess(ProcessInfo prs) {
+        executeDatabaseTask(() -> {
+            try (PreparedStatement stmt = con.prepareStatement("UPDATE Processes SET PROCESS_NAME = ? WHERE ID = ?")) {
+                stmt.setString(1,prs.getProcess_name());
+                stmt.setInt(2, prs.getId());
+                stmt.executeUpdate();
+            } catch (SQLException e) {
+                System.err.println("Error setting time limit: " + e.getMessage());
+            }
+        });
+        executeDatabaseTask(() -> {
+            try (PreparedStatement stmt = con.prepareStatement("UPDATE TimeLimits SET TIME_LIMIT = ? WHERE PROCESS_ID = ?")) {
+                stmt.setInt(1,prs.getTime_limit());
+                stmt.setInt(2, prs.getId());
+                stmt.executeUpdate();
+            } catch (SQLException e) {
+                System.err.println("Error setting time limit: " + e.getMessage());
+            }
+        });
     }
 }

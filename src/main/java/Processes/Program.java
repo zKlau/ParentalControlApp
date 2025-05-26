@@ -13,11 +13,11 @@ public class Program {
     public boolean allow_connection = true;
     public String system_user = System.getProperty("user.name");
     public Timer timer;
-
-
+    public int current_user = 0;
     public Program() {
-        db.addProcess("msedge.exe", 0);
-        db.setTimeLimit(1, 50);
+
+        //db.addProcess("msedge.exe", 0);
+        //db.setTimeLimit(1, 50);
         Timer timer = new Timer(true);
 
         timer.scheduleAtFixedRate(new TimerTask() {
