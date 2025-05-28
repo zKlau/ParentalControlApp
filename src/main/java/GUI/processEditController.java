@@ -62,7 +62,7 @@ public class processEditController{
 
     @FXML
     public void removeProcess() {
-        System.out.println("Removing Process");
+        program.db.removeProcess(prs);
     }
 
     @FXML

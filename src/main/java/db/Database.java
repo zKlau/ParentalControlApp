@@ -125,9 +125,7 @@ public class Database {
                         return;
                     }
                 }
-                if(prs.getTime_limit() != -1) {
-                    setTimeLimit(prs);
-                }
+
                 try (PreparedStatement insertStmt = con.prepareStatement(
                         "INSERT INTO Processes (USER_ID, PROCESS_NAME, TOTAL_TIME) VALUES (?, ?, 0)")) {
                     insertStmt.setInt(1, prs.getUser_id());
@@ -139,7 +137,29 @@ public class Database {
                 System.err.println("Error adding process: " + e.getMessage());
             }
         });
+
+        executeDatabaseTask(() -> {
+            try (PreparedStatement idStmt = con.prepareStatement(
+                    "Select ID from Processes WHERE USER_ID = ? AND PROCESS_NAME = ?")){
+                idStmt.setInt(1,prs.getUser_id());
+                idStmt.setString(2,prs.getProcess_name());
+
+                try (ResultSet rs = idStmt.executeQuery()) {
+                    if (rs.next()) {
+                        prs.setId(rs.getInt("ID"));
+                        setTimeLimit(prs);
+                    } else {
+                        System.out.println("Process ID not found");
+                    }
+                }
+
+            } catch (SQLException e) {
+                throw new RuntimeException(e);
+            }
+
+            });
     }
+
 
     /**
      * Updates the last recorded time of a process.
@@ -158,23 +178,24 @@ public class Database {
         });
     }
 
+
     /**
      * Sets a time limit for a given process.
      *
      * @param process_id The ID of the process.
      * @param time_limit The time limit to assign (in seconds).
      */
-    public void setTimeLimit(int process_id, int time_limit) {
+    public void setTimeLimit(ProcessInfo prs) {
         executeDatabaseTask(() -> {
             try (PreparedStatement checkStmt = con.prepareStatement(
                     "Select * from Timelimits  WHERE PROCESS_ID= ?")) {
-                checkStmt.setInt(1, process_id);
+                checkStmt.setInt(1, prs.getId());
                 try (ResultSet rs = checkStmt.executeQuery()) {
                     if (rs.next()) {
                         try (PreparedStatement updateStmt = con.prepareStatement(
                                 "UPDATE Timelimits SET TIME_LIMIT = ? WHERE PROCESS_ID= ?")) {
-                            updateStmt.setInt(1, time_limit);
-                            updateStmt.setInt(2, process_id);
+                            updateStmt.setInt(1, prs.getTime_limit());
+                            updateStmt.setInt(2, prs.getId());
                             updateStmt.executeUpdate();
                             return;
                         }
@@ -183,10 +204,10 @@ public class Database {
 
                 try (PreparedStatement insertStmt = con.prepareStatement(
                         "INSERT INTO Timelimits (PROCESS_ID, TIME_LIMIT) VALUES (?, ? )")) {
-                    insertStmt.setInt(1, process_id);
-                    insertStmt.setInt(2, time_limit);
+                    insertStmt.setInt(1, prs.getId());
+                    insertStmt.setInt(2, prs.getTime_limit());
                     insertStmt.executeUpdate();
-                    System.out.println("Time limit added for PID: " + process_id);
+                    System.out.println("Time limit added for PID: " + prs.getId() + " with time limit: " + prs.getTime_limit());
                 }
             } catch (SQLException e) {
                 System.err.println("Error setting time limit: " + e.getMessage());
@@ -244,19 +265,21 @@ public class Database {
      *
      * @param process_id The ID of the process to remove.
      */
-    public synchronized void removeProcess(int process_id) {
-        try {
-            PreparedStatement checkQuery = con.prepareStatement("DELETE FROM Processes WHERE ID=?");
-            checkQuery.setInt(1, process_id);
-            ResultSet rs = checkQuery.executeQuery();
+    public synchronized void removeProcess(ProcessInfo prs) {
+        executeDatabaseTask(() -> {
+            try {
+                PreparedStatement checkQuery = con.prepareStatement("DELETE FROM Processes WHERE ID=?");
+                checkQuery.setInt(1, prs.getId());
+                checkQuery.executeUpdate();
 
-            PreparedStatement checkQuery2 = con.prepareStatement("DELETE FROM TimeLimits WHERE PROCESS_ID=?");
-            checkQuery2.setInt(1, process_id);
-            ResultSet rs2 = checkQuery.executeQuery();
+                PreparedStatement checkQuery2 = con.prepareStatement("DELETE FROM TimeLimits WHERE PROCESS_ID=?");
+                checkQuery2.setInt(1, prs.getId());
+                checkQuery2.executeUpdate();
 
-        } catch (SQLException e) {
-            throw new RuntimeException(e);
-        }
+            } catch (SQLException e) {
+                throw new RuntimeException(e);
+            }
+        });
     }
 
     /**

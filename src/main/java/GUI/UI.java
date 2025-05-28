@@ -9,7 +9,9 @@ import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
 
+import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.util.ArrayList;
 import Processes.Program;
 import javafx.scene.layout.HBox;
@@ -51,6 +53,7 @@ public class UI {
      */
     public void onProgramReady(Program program) {
         this.program = program;
+        this.program.ui = this;
         ArrayList<UserInfo> users = program.db.getUsers();
         System.out.println(users.toString());
         if (!users.isEmpty()) {
@@ -198,5 +201,25 @@ public class UI {
     @FXML
     public void deleteUser() {
         System.out.println("Deleting user");
+    }
+
+
+    @FXML
+    public void showRunningProcesses() {
+        System.out.println("Showing running processes");
+        try {
+            Process process = Runtime.getRuntime().exec("tasklist");
+
+            BufferedReader buffer = new BufferedReader(new InputStreamReader(process.getInputStream()));
+
+            String line;
+
+            while ((line = buffer.readLine()) != null) {
+                System.out.println(line);
+            }
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+
     }
 }
