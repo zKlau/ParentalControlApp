@@ -1,5 +1,6 @@
 package GUI;
 
+import Events.EventInfo;
 import Processes.ProcessInfo;
 import Processes.UserInfo;
 import javafx.application.Platform;
@@ -18,53 +19,58 @@ import javafx.scene.layout.HBox;
 import javafx.stage.Stage;
 
 /**
- * The {@code UI} class is responsible for managing the graphical user interface logic for the application.
- * It is connected to the JavaFX framework and interacts with an instance of {@code Program} to display
- * processes and provide options for editing, adding, and removing them.
+ * The {@code UI} class is responsible for managing the graphical user interface logic of the application.
+ * It is integrated with JavaFX and communicates with the {@link Program} backend to manage users, processes,
+ * and event data for display and editing.
  */
 public class UI {
-    
+
     /**
-     * Reference to the {@code Program} instance that handles backend logic.
+     * Reference to the {@link Program} instance that provides backend logic.
      */
     Program program;
 
     /**
-     * ListView in the FXML file to display the processes.
+     * ListView UI component displaying user-specific process entries.
      */
     @FXML
     private ListView<ProcessInfo> processes;
 
     /**
-     * Reference to the {@code UI} controller for handling actions in the UI.
+     * ListView UI component displaying user-specific event entries.
      */
+    @FXML
+    private ListView<EventInfo> events;
 
-    private UI controller;
-
-
+    /**
+     * MenuButton used to list and select users dynamically.
+     */
     @FXML
     private MenuButton selectUsers;
+
     /**
-     * This method is called when the {@code Program} instance is ready and initialized.
-     * It retrieves a list of processes from the program's database, updates the {@code ListView},
-     * and sets up a custom cell factory to define behavior for each process entry.
+     * This method is called when the {@link Program} instance is ready and connected.
+     * It attempts to load existing users and initialize their associated data (processes/events),
+     * or prompts to create a new user if none exist.
      *
-     * @param program The {@code Program} instance that provides the backend logic.
+     * @param program the {@link Program} instance initialized at application start.
      */
     public void onProgramReady(Program program) {
         this.program = program;
         this.program.ui = this;
         ArrayList<UserInfo> users = program.db.getUsers();
-        System.out.println(users.toString());
         if (!users.isEmpty()) {
             populateUsersMenu(users);
-            System.out.println("Users not empty");
             populateProgramList(0);
             program.allow_connection = true;
-        }  else {
+        } else {
             createUserWindow();
         }
     }
+
+    /**
+     * Displays a window for creating a new user.
+     */
     public void createUserWindow() {
         Platform.runLater(() -> {
             try {
@@ -74,22 +80,26 @@ public class UI {
                 CreateUserController controllerUser = loader.getController();
                 controllerUser.setProgram(program);
                 controllerUser.setUIController(this);
-                Scene scene = new Scene(root);
+
                 Stage stage = new Stage();
                 stage.setTitle("Creating User");
-                stage.setScene(scene);
+                stage.setScene(new Scene(root));
                 stage.show();
             } catch (IOException e) {
-                throw new RuntimeException(e);
+                throw new RuntimeException("Failed to load user creation window", e);
             }
         });
     }
+
+    /**
+     * Populates the {@code processes} and {@code events} ListViews with data belonging to the selected user.
+     *
+     * @param user_id the ID of the selected user.
+     */
     public void populateProgramList(int user_id) {
-
+        // Processes
         ArrayList<ProcessInfo> prs = program.db.getProcesses(user_id);
-        processes.getItems().clear();
-        processes.getItems().addAll(prs);
-
+        processes.getItems().setAll(prs);
         processes.setCellFactory(listView -> new ListCell<>() {
             private final Button btn = new Button("EDIT");
             private final HBox hbox = new HBox(10);
@@ -97,10 +107,7 @@ public class UI {
 
             {
                 hbox.getChildren().addAll(label, btn);
-                btn.setOnAction(i -> {
-                    ProcessInfo proc = getItem();
-                    processEditMenu(proc);
-                });
+                btn.setOnAction(e -> processEditMenu(getItem()));
             }
 
             @Override
@@ -114,7 +121,38 @@ public class UI {
                 }
             }
         });
+
+        // Events
+        ArrayList<EventInfo> evts = program.db.getEvents(user_id);
+        events.getItems().setAll(evts);
+        events.setCellFactory(listView -> new ListCell<>() {
+            private final Button btn = new Button("EDIT");
+            private final HBox hbox = new HBox(10);
+            private final Label label = new Label();
+
+            {
+                hbox.getChildren().addAll(label, btn);
+                btn.setOnAction(e -> eventEditMenu(getItem()));
+            }
+
+            @Override
+            protected void updateItem(EventInfo item, boolean empty) {
+                super.updateItem(item, empty);
+                if (empty || item == null) {
+                    setGraphic(null);
+                } else {
+                    label.setText("Event: " + item.getEvent_name() + "  @ " + item.getTime() / 60 + "H:" + item.getTime() % 60 + "M   R:" + item.isRepeat());
+                    setGraphic(hbox);
+                }
+            }
+        });
     }
+
+    /**
+     * Opens an editing window for the selected {@link ProcessInfo}. If null, creates a new process.
+     *
+     * @param item the {@code ProcessInfo} object to be edited or {@code null} to create a new one.
+     */
     public void processEditMenu(ProcessInfo item) {
         try {
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/processEdit.fxml"));
@@ -122,45 +160,65 @@ public class UI {
 
             processEditController controller = loader.getController();
             controller.print();
-            Scene scene = new Scene(root);
-            Stage stage = new Stage();
+            controller.setProgram(program);
 
-
-            if (item != null) {
-                stage.setTitle("Editing " + item.getProcess_name());
-            } else {
+            if (item == null) {
                 item = new ProcessInfo();
-                stage.setTitle("Creating Process");
+                controller.setProcess(item);
+            } else {
+                controller.setProcess(item);
             }
 
-            controller.setProcess(item);
-            controller.setProgram(program);
-            stage.setScene(scene);
+            Stage stage = new Stage();
+            stage.setTitle(item.getProcess_name() != null ? "Editing " + item.getProcess_name() : "Creating Process");
+            stage.setScene(new Scene(root));
             stage.show();
         } catch (IOException e) {
-            throw new RuntimeException(e);
+            throw new RuntimeException("Failed to open process edit window", e);
         }
     }
+
+    /**
+     * Placeholder method for editing an {@link EventInfo}.
+     *
+     * @param evt the {@code EventInfo} object to be edited.
+     */
+    private void eventEditMenu(EventInfo evt) {
+        System.out.println("Editing event: " + evt.getEvent_name());
+    }
+
+    /**
+     * Refreshes the entire UI, including the user list and associated data.
+     */
     @FXML
     public void refreshList() {
         updateMenu();
     }
+
+    /**
+     * Updates the users menu and repopulates the ListViews with the current user's data.
+     */
     public void updateMenu() {
         populateUsersMenu(null);
         populateProgramList(program.current_user);
     }
+
+    /**
+     * Populates the user selection menu with available users from the database.
+     *
+     * @param users an optional list of users; if null, they are fetched from the database.
+     */
     public void populateUsersMenu(ArrayList<UserInfo> users) {
         if (users == null) {
             users = program.db.getUsers();
         }
+
         selectUsers.getItems().clear();
-        int i = 0;
+
         for (UserInfo user : users) {
             MenuItem item = new MenuItem(user.getName());
             item.setOnAction(e -> {
-                System.out.println("Selected user: " + user.getId());
-                program.current_user = user.getId()-1;
-                System.out.println(System.getProperty("user.name"));
+                program.current_user = user.getId() - 1;
                 updateMenu();
             });
             selectUsers.getItems().add(item);
@@ -168,58 +226,53 @@ public class UI {
     }
 
     /**
-     * Called by the JavaFX framework during the FXML loading process. This method is
-     * intended for any initialization tasks related to UI components.
+     * JavaFX lifecycle method. Called automatically after FXML loading.
      */
     @FXML
-    public void initialize() {
-    }
+    public void initialize() {}
 
     /**
-     * Handles the addition of a new process. This method is triggered by a corresponding
-     * UI action, such as a button click.
+     * Handles the action for adding a new process entry.
+     * This will open the process editing window in "create" mode.
      */
-
-    /**
-     * Handles the removal of a selected process. This method is triggered by a corresponding
-     * UI action, such as a button click.
-     */
-
-
     @FXML
     public void addProcess() {
         processEditMenu(null);
     }
 
-
+    /**
+     * Triggers the user creation window via a button or menu action.
+     */
     @FXML
     public void createUser() {
         createUserWindow();
     }
 
-
+    /**
+     * Deletes the currently selected user.
+     * Placeholder for delete logic (to be implemented).
+     */
     @FXML
     public void deleteUser() {
         System.out.println("Deleting user");
     }
 
-
+    /**
+     * Displays currently running system processes in the console using the `tasklist` command.
+     * Works on Windows systems only.
+     */
     @FXML
     public void showRunningProcesses() {
         System.out.println("Showing running processes");
         try {
             Process process = Runtime.getRuntime().exec("tasklist");
-
             BufferedReader buffer = new BufferedReader(new InputStreamReader(process.getInputStream()));
-
             String line;
-
             while ((line = buffer.readLine()) != null) {
                 System.out.println(line);
             }
         } catch (IOException e) {
-            throw new RuntimeException(e);
+            throw new RuntimeException("Failed to execute tasklist command", e);
         }
-
     }
 }

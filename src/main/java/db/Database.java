@@ -1,4 +1,5 @@
 package db;
+import Events.EventInfo;
 import Processes.ProcessInfo;
 import Processes.UserInfo;
 
@@ -65,6 +66,14 @@ public class Database {
                     TIME_LIMIT INTEGER NOT NULL,
                     FOREIGN KEY (PROCESS_ID) REFERENCES Processes(ID)
                 );
+                CREATE TABLE IF NOT EXISTS Events (
+                    ID INTEGER PRIMARY KEY AUTOINCREMENT,
+                    USER_ID INTEGER NOT NULL,
+                    EVENT_NAME TEXT NOT NULL,
+                    TIME INTEGER NOT NULL,
+                    REPEAT INTEGER NOT NULL,
+                    FOREIGN KEY (USER_ID) REFERENCES Users(ID)
+                );
             """);
             System.out.println("Database successfully created");
         } catch (SQLException e) {
@@ -117,8 +126,9 @@ public class Database {
      */
     public void addProcess(ProcessInfo prs) {
         executeDatabaseTask(() -> {
-            try (PreparedStatement stmt = con.prepareStatement("SELECT 1 FROM Processes WHERE PROCESS_NAME = ?")) {
+            try (PreparedStatement stmt = con.prepareStatement("SELECT 1 FROM Processes WHERE PROCESS_NAME = ? AND USER_ID = ?")) {
                 stmt.setString(1, prs.getProcess_name());
+                stmt.setInt(2, prs.getUser_id());
                 try (ResultSet rs = stmt.executeQuery()) {
                     if (rs.next()) {
                         System.out.println("Process already exists.");
@@ -370,4 +380,96 @@ public class Database {
             }
         });
     }
+
+
+
+    public void addEvent(EventInfo evt) {
+        executeDatabaseTask(() -> {
+            try (PreparedStatement stmt = con.prepareStatement("SELECT 1 FROM Events WHERE EVENT_NAME = ? AND USER_ID = ?")) {
+                stmt.setString(1, evt.getEvent_name());
+                stmt.setInt(2, evt.getUser_id());
+                try (ResultSet rs = stmt.executeQuery()) {
+                    if (rs.next()) {
+                        System.out.println("Event already exists.");
+                        return;
+                    }
+                }
+
+                try (PreparedStatement insertStmt = con.prepareStatement(
+                        "INSERT INTO Events (USER_ID, EVENT_NAME, TIME,REPEAT) VALUES (?, ?, ?,?)")) {
+                    insertStmt.setInt(1, evt.getUser_id());
+                    insertStmt.setString(2, evt.getEvent_name());
+                    insertStmt.setInt(3, evt.getTime());
+                    insertStmt.setInt(4,evt.isRepeat() ? 1 : 0);
+                    insertStmt.executeUpdate();
+                    System.out.println("Event added: " + evt.getEvent_name ());
+                }
+            } catch (SQLException e) {
+                System.err.println("Error adding Event: " + e.getMessage());
+            }
+        });
+    }
+
+
+    public synchronized void removeEvent(EventInfo evt) {
+        executeDatabaseTask(() -> {
+            try {
+                PreparedStatement checkQuery = con.prepareStatement("DELETE FROM Events WHERE ID=?");
+                checkQuery.setInt(1, evt.getId());
+                checkQuery.executeUpdate();
+            } catch (SQLException e) {
+                throw new RuntimeException(e);
+            }
+        });
+    }
+
+    /**
+     * Retrieves all events for a specific user.
+     *
+     * @param userId The ID of the user.
+     * @return A list of {@code EventInfo} objects for the user.
+     */
+    public synchronized ArrayList<EventInfo> getEvents(int userId) {
+        ArrayList<EventInfo> events = new ArrayList<>();
+        try (PreparedStatement stmt = con.prepareStatement("SELECT * FROM Events WHERE USER_ID = ?")) {
+            stmt.setInt(1, userId);
+            ResultSet rs = stmt.executeQuery();
+
+            while (rs.next()) {
+                EventInfo evt = new EventInfo(
+                        rs.getInt("ID"),
+                        rs.getInt("USER_ID"),
+                        rs.getString("EVENT_NAME"),
+                        rs.getInt("TIME"),
+                        rs.getInt("REPEAT") == 1
+                );
+                events.add(evt);
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException("Error retrieving events: " + e.getMessage(), e);
+        }
+        return events;
+    }
+
+    /**
+     * Updates an existing event in the database.
+     *
+     * @param evt The {@code EventInfo} object containing updated event data.
+     */
+    public void updateEvent(EventInfo evt) {
+        executeDatabaseTask(() -> {
+            try (PreparedStatement stmt = con.prepareStatement(
+                    "UPDATE Events SET EVENT_NAME = ?, TIME = ?, REPEAT = ? WHERE ID = ?")) {
+                stmt.setString(1, evt.getEvent_name());
+                stmt.setInt(2, evt.getTime());
+                stmt.setInt(3, evt.isRepeat() ? 1 : 0);
+                stmt.setInt(4, evt.getId());
+                stmt.executeUpdate();
+                System.out.println("Event updated: " + evt.getEvent_name());
+            } catch (SQLException e) {
+                System.err.println("Error updating Event: " + e.getMessage());
+            }
+        });
+    }
+
 }

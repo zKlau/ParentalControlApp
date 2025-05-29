@@ -6,14 +6,17 @@
 <?import javafx.scene.control.MenuButton?>
 <?import javafx.scene.layout.AnchorPane?>
 
-<AnchorPane prefHeight="400.0" prefWidth="600.0" xmlns="http://javafx.com/javafx/23.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="GUI.UI">
+<AnchorPane prefHeight="602.0" prefWidth="889.0" xmlns="http://javafx.com/javafx/23.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="GUI.UI">
     <children>
 
         <Label text="ADMIN" AnchorPane.leftAnchor="7.0" AnchorPane.topAnchor="6.0" />
 
         <Label text="Processes" AnchorPane.leftAnchor="27.0" AnchorPane.topAnchor="35.0" />
 
-        <ListView fx:id="processes" AnchorPane.bottomAnchor="45.0" AnchorPane.leftAnchor="27.0" AnchorPane.rightAnchor="190.0" AnchorPane.topAnchor="60.0" />
+        <ListView fx:id="processes" prefHeight="497.0" prefWidth="364.0" AnchorPane.bottomAnchor="45.0" AnchorPane.leftAnchor="27.0" AnchorPane.rightAnchor="498.0" AnchorPane.topAnchor="60.0" />
+        <Label layoutX="391.0" layoutY="35.0" text="Events" AnchorPane.leftAnchor="391.0" AnchorPane.topAnchor="35.0" />
+
+        <ListView fx:id="events" layoutX="391.0" layoutY="60.0" prefHeight="497.0" prefWidth="317.0" AnchorPane.bottomAnchor="45.0" AnchorPane.leftAnchor="391.0" AnchorPane.rightAnchor="181.0" AnchorPane.topAnchor="60.0" />
 
         <Button onAction="#addProcess" text="Add Process" AnchorPane.bottomAnchor="10.0" AnchorPane.leftAnchor="27.0" />
 
@@ -23,9 +26,9 @@
         </MenuButton>
 
         <Button layoutX="465.0" layoutY="117.0" onAction="#createUser" text="Create User" AnchorPane.rightAnchor="57.0" AnchorPane.topAnchor="117.0" />
-      <Button layoutX="465.0" layoutY="164.0" mnemonicParsing="false" onAction="#deleteUser" text="Delete User" />
-      <Button layoutX="333.0" layoutY="31.0" mnemonicParsing="false" onAction="#refreshList" text="Refresh List" />
-      <Button layoutX="508.0" layoutY="353.0" mnemonicParsing="false" onAction="#showRunningProcesses" text="RUNNING" />
+      <Button layoutX="754.0" layoutY="156.0" mnemonicParsing="false" onAction="#deleteUser" text="Delete User" AnchorPane.rightAnchor="57.0" AnchorPane.topAnchor="156.0" />
+      <Button layoutX="708.0" layoutY="567.0" mnemonicParsing="false" onAction="#refreshList" text="Refresh List" AnchorPane.bottomAnchor="10.0" AnchorPane.rightAnchor="104.0" />
+      <Button layoutX="797.0" layoutY="567.0" mnemonicParsing="false" onAction="#showRunningProcesses" text="RUNNING" />
 
     </children>
 </AnchorPane>

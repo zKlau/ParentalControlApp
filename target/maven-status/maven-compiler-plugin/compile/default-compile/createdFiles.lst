@@ -1,7 +1,9 @@
 Processes\ProcessInfo.class
+GUI\UI$2.class
 GUI\MainUI.class
 db\Database.class
 GUI\UI$1.class
+Events\EventInfo.class
 Processes\Program$1.class
 GUI\UI.class
 GUI\CreateUserController.class
