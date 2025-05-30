@@ -6,6 +6,7 @@ import Processes.UserInfo;
 import javafx.application.Platform;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
+import javafx.scene.Group;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
@@ -17,6 +18,9 @@ import java.util.ArrayList;
 import Processes.Program;
 import javafx.scene.layout.HBox;
 import javafx.stage.Stage;
+
+import javafx.scene.layout.AnchorPane;
+import javafx.scene.transform.Scale;
 
 /**
  * The {@code UI} class is responsible for managing the graphical user interface logic of the application.
@@ -226,12 +230,6 @@ public class UI {
     }
 
     /**
-     * JavaFX lifecycle method. Called automatically after FXML loading.
-     */
-    @FXML
-    public void initialize() {}
-
-    /**
      * Handles the action for adding a new process entry.
      * This will open the process editing window in "create" mode.
      */
@@ -274,5 +272,29 @@ public class UI {
         } catch (IOException e) {
             throw new RuntimeException("Failed to execute tasklist command", e);
         }
+    }
+
+
+    @FXML
+    private AnchorPane processGroup;
+    @FXML
+    private AnchorPane eventsGroup;
+
+    @FXML
+    public void processesButtonPressed() {
+        eventsGroup.setVisible(false);
+        processGroup.setVisible(true);
+    }
+
+
+    @FXML
+    public void eventsButtonPressed() {
+        processGroup.setVisible(false);
+        eventsGroup.setVisible(true);
+    }
+
+    @FXML
+    public void usersButtonPressed() {
+
     }
 }

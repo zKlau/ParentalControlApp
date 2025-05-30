@@ -7,6 +7,8 @@ import javafx.scene.Scene;
 import javafx.fxml.FXMLLoader;
 import javafx.stage.Stage;
 
+import java.util.Objects;
+
 /**
  * The {@code MainUI} class serves as the main entry point for the ParentalControlApp.
  * It handles the initialization of the application's user interface, the connection
@@ -35,9 +37,11 @@ public class MainUI extends Application {
         controller = loader.getController();
 
         Scene scene = new Scene(root);
+        scene.getStylesheets().add(getClass().getResource("/style.css").toExternalForm());
         stage.setTitle("ParentalControlApp");
         stage.setScene(scene);
         stage.show();
+
 
         new Thread(() -> {
             Program program = new Program();
