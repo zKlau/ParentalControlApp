@@ -1,12 +1,14 @@
 package GUI;
 
 import Processes.Program;
+import GUI.ResizeHelper;
 import javafx.application.Application;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.fxml.FXMLLoader;
+import javafx.scene.layout.Region;
 import javafx.stage.Stage;
-
+import javafx.stage.StageStyle;
 import java.util.Objects;
 
 /**
@@ -35,12 +37,13 @@ public class MainUI extends Application {
         Parent root = loader.load();
 
         controller = loader.getController();
-
+        stage.initStyle(StageStyle.UNDECORATED);
         Scene scene = new Scene(root);
         scene.getStylesheets().add(getClass().getResource("/style.css").toExternalForm());
         stage.setTitle("ParentalControlApp");
         stage.setScene(scene);
         stage.show();
+        ResizeHelper.addResizeListener(stage, (Region) root);
 
 
         new Thread(() -> {

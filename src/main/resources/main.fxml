@@ -8,6 +8,7 @@
 <?import javafx.scene.image.Image?>
 <?import javafx.scene.image.ImageView?>
 <?import javafx.scene.layout.AnchorPane?>
+<?import javafx.scene.layout.HBox?>
 <?import javafx.scene.layout.Pane?>
 
 <AnchorPane id="root" fx:id="root" prefHeight="602.0" prefWidth="1087.0" styleClass="root" stylesheets="@style.css" xmlns="http://javafx.com/javafx/23.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="GUI.UI">
@@ -19,6 +20,9 @@
         <children>
             <Label layoutX="4.0" layoutY="3.0" styleClass="listMenuTitle" text="Processes" />
             <ListView fx:id="processes" styleClass="listMenu" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="4.0" AnchorPane.rightAnchor="4.0" AnchorPane.topAnchor="28.0" />
+      
+            
+                    <Button layoutX="5.0" layoutY="511.0" onAction="#addProcess" styleClass="clickButton" text="Add Process" AnchorPane.bottomAnchor="-53.0" AnchorPane.leftAnchor="5.0" />
         </children>
 
     </AnchorPane>
@@ -26,11 +30,9 @@
             <children>
                 <Label layoutX="4.0" layoutY="3.0" styleClass="listMenuTitle" text="Events" />
                 <ListView fx:id="events" styleClass="listMenu" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="4.0" AnchorPane.rightAnchor="4.0" AnchorPane.topAnchor="28.0" />
+            <Button layoutY="515.0" onAction="#addEvent" styleClass="clickButton" text="Add Event" AnchorPane.bottomAnchor="-53.0" AnchorPane.leftAnchor="5.0" />
             </children>
         </AnchorPane>
-
-
-        <Button layoutX="205.0" layoutY="570.0" onAction="#addProcess" styleClass="clickButton" text="Add Process" AnchorPane.bottomAnchor="10.0" AnchorPane.leftAnchor="205.0" />
       <Group layoutX="903.0" layoutY="35.0" visible="false">
          <children>
               <Label text="Select User" />
@@ -55,5 +57,13 @@
             <Image url="@Images/user.png" />
          </image>
       </ImageView>
+        <HBox fx:id="topBarPane" alignment="TOP_RIGHT" layoutX="75.0" onMouseDragged="#windowDragged" onMousePressed="#windowPressed" prefHeight="27.0" prefWidth="1011.0" AnchorPane.leftAnchor="75.0" AnchorPane.rightAnchor="1.0" AnchorPane.topAnchor="0.0">
+            <children>
+                <Button fx:id="minimizeButton" mnemonicParsing="false" onAction="#minimizeWindow" text="-" textAlignment="RIGHT" />
+                <Button fx:id="maximizeButton" mnemonicParsing="false" onAction="#maximizeWindow" text="▢" textAlignment="RIGHT" />
+                <Button fx:id="closeButton" mnemonicParsing="false" onAction="#closeWindow" text="X" textAlignment="RIGHT" />
+            </children>
+        </HBox>
+
     </children>
 </AnchorPane>

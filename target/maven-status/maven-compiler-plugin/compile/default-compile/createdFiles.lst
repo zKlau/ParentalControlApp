@@ -1,5 +1,6 @@
 Processes\ProcessInfo.class
 GUI\UI$2.class
+GUI\ResizeHelper.class
 GUI\MainUI.class
 GUI\CreateUserController.class
 GUI\processEditController.class
@@ -9,4 +10,5 @@ GUI\UI$1.class
 Events\EventInfo.class
 Processes\Program$1.class
 GUI\UI.class
+GUI\eventEditController.class
 Processes\UserInfo.class

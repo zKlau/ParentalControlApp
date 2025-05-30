@@ -6,6 +6,7 @@ import Processes.UserInfo;
 import javafx.application.Platform;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
+import javafx.geometry.Rectangle2D;
 import javafx.scene.Group;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
@@ -17,10 +18,12 @@ import java.io.InputStreamReader;
 import java.util.ArrayList;
 import Processes.Program;
 import javafx.scene.layout.HBox;
+import javafx.stage.Screen;
 import javafx.stage.Stage;
 
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.transform.Scale;
+import jdk.jfr.Event;
 
 /**
  * The {@code UI} class is responsible for managing the graphical user interface logic of the application.
@@ -52,6 +55,12 @@ public class UI {
     @FXML
     private MenuButton selectUsers;
 
+    private double xOffset = 0;
+    private double yOffset = 0;
+    private Stage primaryStage;
+
+    @FXML
+    private HBox topBarPane;
     /**
      * This method is called when the {@link Program} instance is ready and connected.
      * It attempts to load existing users and initialize their associated data (processes/events),
@@ -60,6 +69,7 @@ public class UI {
      * @param program the {@link Program} instance initialized at application start.
      */
     public void onProgramReady(Program program) {
+        this.primaryStage = (Stage) processes.getScene().getWindow();
         this.program = program;
         this.program.ui = this;
         ArrayList<UserInfo> users = program.db.getUsers();
@@ -70,6 +80,64 @@ public class UI {
         } else {
             createUserWindow();
         }
+
+
+    }
+
+
+    @FXML
+    public void windowPressed(javafx.scene.input.MouseEvent event) {
+        xOffset = event.getSceneX();
+        yOffset = event.getSceneY();
+    }
+
+    @FXML
+    public void windowDragged(javafx.scene.input.MouseEvent event) {
+        Stage stage = (Stage) ((HBox) event.getSource()).getScene().getWindow();
+        if (!stage.isMaximized()) {
+            stage.setX(event.getScreenX() - xOffset);
+            stage.setY(event.getScreenY() - yOffset);
+        }
+    }
+
+    @FXML
+    public void minimizeWindow() {
+        primaryStage.setIconified(true);
+    }
+
+    private boolean isMaximized = false;
+    private double prevX, prevY, prevWidth, prevHeight;
+
+    @FXML
+    public void maximizeWindow() {
+        if (!isMaximized) {
+            prevX = primaryStage.getX();
+            prevY = primaryStage.getY();
+            prevWidth = primaryStage.getWidth();
+            prevHeight = primaryStage.getHeight();
+
+            Rectangle2D bounds = Screen.getPrimary().getVisualBounds();
+
+            primaryStage.setX(bounds.getMinX());
+            primaryStage.setY(bounds.getMinY());
+            primaryStage.setWidth(bounds.getWidth());
+            primaryStage.setHeight(bounds.getHeight());
+
+            isMaximized = true;
+        } else {
+            primaryStage.setX(prevX);
+            primaryStage.setY(prevY);
+            primaryStage.setWidth(prevWidth);
+            primaryStage.setHeight(prevHeight);
+
+            isMaximized = false;
+        }
+    }
+
+
+    @FXML
+    public void closeWindow() {
+        Platform.exit();
     }
 
     /**
@@ -187,8 +255,29 @@ public class UI {
      *
      * @param evt the {@code EventInfo} object to be edited.
      */
-    private void eventEditMenu(EventInfo evt) {
-        System.out.println("Editing event: " + evt.getEvent_name());
+    private void eventEditMenu(EventInfo item) {
+        try {
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/eventEdit.fxml"));
+            Parent root = loader.load();
+
+            eventEditController controller = loader.getController();
+            controller.print();
+            controller.setProgram(program);
+
+            if (item == null) {
+                item = new EventInfo();
+                controller.setEvent(item);
+            } else {
+                controller.setEvent(item);
+            }
+
+            Stage stage = new Stage();
+            stage.setTitle(item.getEvent_name() != null ? "Editing " + item.getEvent_name() : "Creating Event");
+            stage.setScene(new Scene(root));
+            stage.show();
+        } catch (IOException e) {
+            throw new RuntimeException("Failed to open process edit window", e);
+        }
     }
 
     /**
@@ -236,6 +325,11 @@ public class UI {
     @FXML
     public void addProcess() {
         processEditMenu(null);
+    }
+
+    @FXML
+    public void addEvent() {
+        eventEditMenu(null);
     }
 
     /**
@@ -297,4 +391,6 @@ public class UI {
     public void usersButtonPressed() {
 
     }
+
+
 }

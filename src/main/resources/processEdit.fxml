@@ -11,7 +11,7 @@
 
 <AnchorPane prefHeight="138.0" prefWidth="574.0" xmlns="http://javafx.com/javafx/23.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="GUI.processEditController">
    <children>
-      <Group fx:id="ProcessGroup" layoutX="16.0" layoutY="49.0" visible="false">
+      <Group fx:id="ProcessGroup" layoutX="16.0" layoutY="49.0" visible="true">
          <children>
             <Label layoutX="-3.0" layoutY="4.0" prefHeight="17.0" prefWidth="41.0" text="URL:" />
             <Button layoutX="184.0" mnemonicParsing="false" onAction="#openFileSelection" text="FIle Select" />
@@ -22,18 +22,5 @@
       </Group>
       <Button id="save_process" layoutX="46.0" layoutY="102.0" mnemonicParsing="false" onAction="#saveProcess" prefHeight="17.0" prefWidth="96.0" text="Save" />
       <Button id="remove_process" layoutX="393.0" layoutY="102.0" mnemonicParsing="false" onAction="#removeProcess" prefHeight="17.0" prefWidth="96.0" text="Remove" />
-      <MenuButton fx:id="typeMenu" layoutX="15.0" layoutY="14.0" mnemonicParsing="false" text="Type" />
-      <Group fx:id="EventGroup" layoutX="24.0" layoutY="37.0">
-         <children>
-            <MenuButton fx:id="eventTypeMenu" layoutY="13.0" mnemonicParsing="false" text="Event Type" />
-            <Label layoutX="220.0" layoutY="4.0" text="Hour: " />
-            <Label layoutX="303.0" layoutY="4.0" text="Minute: " />
-            <TextField fx:id="hour" alignment="CENTER" layoutX="253.0" prefHeight="25.0" prefWidth="44.0" promptText="18" />
-            <TextField fx:id="minute" alignment="CENTER" layoutX="347.0" prefHeight="25.0" prefWidth="44.0" promptText="59" />
-            <CheckBox fx:id="runningAtCheckbox" layoutX="173.0" layoutY="35.0" mnemonicParsing="false" onAction="#selectRunningAt" text="Event running at 18:59?" />
-            <CheckBox fx:id="runningAfterCheckbox" layoutX="333.0" layoutY="35.0" mnemonicParsing="false" onAction="#selectRunningAfter" text="Event running after 18:59 hours?" />
-            <CheckBox fx:id="RepeatCheckbox" layoutX="409.0" layoutY="4.0" mnemonicParsing="false" onAction="#selectRepeat" text="Repeat" />
-         </children>
-      </Group>
    </children>
 </AnchorPane>

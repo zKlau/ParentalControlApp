@@ -7,6 +7,13 @@ public class EventInfo {
     private int time;
     private boolean repeat;
 
+    public EventInfo() {
+        this.id = -1;
+        this.user_id = -1;
+        this.event_name = "";
+        this.time = 0;
+        this.repeat = false;
+    }
     public EventInfo(int id, int user_id, String event_name, int time, boolean repeat) {
         this.id = id;
         this.user_id = user_id;

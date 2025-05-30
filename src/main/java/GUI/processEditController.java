@@ -50,37 +50,6 @@ public class processEditController{
     private Group EventGroup;
 
     public void setProcess(ProcessInfo process) {
-        ArrayList<String> events = new ArrayList<>(Arrays.asList("Computer Shutdown","User System logout", "Screenshot"));
-        event_type = events.getFirst();
-        for(String type :events) {
-            MenuItem item = new MenuItem(type);
-            item.setOnAction(e -> {
-                event_type = type;
-            });
-            eventTypeMenu.getItems().add(item);
-        }
-
-        ArrayList<String> types = new ArrayList<>(Arrays.asList("Process", "Event","Notification"));
-        current_type = types.getFirst();
-        for(String type : types) {
-            MenuItem item = new MenuItem(type);
-            item.setOnAction(e -> {
-                if (type.equals("Process")) {
-                    current_type = "Process";
-                    ProcessGroup.setVisible(true);
-                    EventGroup.setVisible(false);
-                } else {
-                    current_type = "Event";
-                    ProcessGroup.setVisible(false);
-                    EventGroup.setVisible(true);
-                }
-                System.out.println("Selected type: " + type);
-//                program.current_user = user.getId() - 1;
-            });
-            typeMenu.getItems().add(item);
-        }
-
-
         if (process.getId() == -1) {
             time_limit.setText("0");
             return;
@@ -91,15 +60,8 @@ public class processEditController{
         System.out.println("Merge");
     }
 
-
-    @FXML
-    private TextField hour;
-    @FXML
-    private TextField minute;
-
     @FXML
     public void saveProcess() {
-        if(current_type.equals("Process")) {
             System.out.println("Saving Process");
             if (prs == null && !processUrl.getText().isBlank()) {
                 System.out.println("ss");
@@ -110,16 +72,6 @@ public class processEditController{
                 prs.setTime_limit(Integer.parseInt(time_limit.getText()));
                 program.db.updateProcess(prs);
             }
-        } else {
-            if (event_type == null || event_type.isBlank() || hour.getText().isBlank() || minute.getText().isBlank() ) {return;}
-            int hours = hour.getText().isBlank() ? 0 : Integer.parseInt(hour.getText());
-            int minutes = minute.getText().isBlank() ? 0 : Integer.parseInt(minute.getText());
-            int time = hours * 60 + minutes;
-            EventInfo newEvent = new EventInfo(0, program.current_user, event_type, time, isRepeating);
-            program.db.addEvent(newEvent);
-        }
-
-
     }
 
     @FXML

@@ -1,5 +1,6 @@
 #root {
     -fx-background-image: url("/Images/bg2.png");
+    -fx-background-radius: 10;
 }
 
 #sideMenu {
@@ -61,4 +62,20 @@
 }
 .clickButton Text {
     -fx-effect: dropshadow( gaussian , #a30000 , 0,0,0,2 );
+}
+
+#minimizeButton, #maximizeButton, #closeButton {
+    -fx-background-color: rgba(54, 36, 0, 0);
+    /*-fx-text-fill: white;*/
+    -fx-font-size: 1.5em;
+    -fx-font-weight: bold;
+    /*-fx-padding: 5 20 0 20*/
+    -fx-margin : 5 20 0 20;
+}
+#minimizeButton:hover, #maximizeButton:hover {
+    -fx-background-color: green;
+}
+
+#closeButton:hover {
+    -fx-background-color: red;
 }
