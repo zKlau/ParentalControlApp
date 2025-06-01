@@ -1,6 +1,6 @@
 #root {
-    -fx-background-image: url("/Images/bg2.png");
-    -fx-background-radius: 10;
+       -fx-background-image: url("/Images/bg2.png");
+
 }
 
 #sideMenu {

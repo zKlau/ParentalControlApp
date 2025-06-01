@@ -37,9 +37,6 @@ public class eventEditController{
     }
 
 
-
-
-
     @FXML
     private MenuButton typeMenu;
     @FXML
@@ -56,38 +53,61 @@ public class eventEditController{
             MenuItem item = new MenuItem(type);
             item.setOnAction(e -> {
                 event_type = type;
+                event_type_text.setText(type);
             });
             eventTypeMenu.getItems().add(item);
         }
+        event_type_text.setText(events.getFirst());
     }
+    @FXML
+    private CheckBox runningAtCheckbox;
+    @FXML
+    private CheckBox runningAfterCheckbox;
+    @FXML
+    private CheckBox RepeatCheckbox;
+    @FXML
+    private Label event_type_text;
     public void setEvent(EventInfo evt) {
         populateLists();
-
         if (evt.getId() == -1) {
             hour.setText("0");
             minute.setText("0");
             return;
         }
         this.evt = evt;
-        //processUrl.setText(evt.getEvent_name());
         hour.setText(Integer.toString(evt.getTime()/60));
         minute.setText(Integer.toString(evt.getTime()%60));
+        RepeatCheckbox.setSelected(evt.isRepeat());
+        runningAtCheckbox.setText("Event running at " + evt.getTime() / 60 + ":" + evt.getTime() % 60 + "");
+        runningAfterCheckbox.setText("Event running after " + evt.getTime() / 60 + "h and " + evt.getTime() % 60 + "m?");
+        runningAtCheckbox.setSelected(evt.isBefore_at());
+        runningAfterCheckbox.setSelected(!evt.isBefore_at());
+        event_type_text.setText(evt.getEvent_name());
         System.out.println("Merge");
     }
     @FXML
     public void saveEvent() {
-        if (event_type == null || event_type.isBlank() || hour.getText().isBlank() || minute.getText().isBlank() ) {return;}
-        int hours = hour.getText().isBlank() ? 0 : Integer.parseInt(hour.getText());
-        int minutes = minute.getText().isBlank() ? 0 : Integer.parseInt(minute.getText());
-        int time = hours * 60 + minutes;
-        EventInfo newEvent = new EventInfo(0, program.current_user, event_type, time, isRepeating);
-        program.db.addEvent(newEvent);
+        if (evt == null && !hour.getText().isBlank()) {
+            int hours = hour.getText().isBlank() ? 0 : Integer.parseInt(hour.getText());
+            int minutes = minute.getText().isBlank() ? 0 : Integer.parseInt(minute.getText());
+            int time = hours * 60 + minutes;
+            boolean before_at = runningAtCheckbox.isSelected();
+            EventInfo newEvent = new EventInfo(0, program.current_user, event_type, time, before_at, isRepeating);
+            program.db.addEvent(newEvent);
+        } else {
+            int hours = hour.getText().isBlank() ? 0 : Integer.parseInt(hour.getText());
+            int minutes = minute.getText().isBlank() ? 0 : Integer.parseInt(minute.getText());
+            int time = hours * 60 + minutes;
+            boolean before_at = runningAtCheckbox.isSelected();
+            System.out.println(isRepeating);
+            evt.setRepeat(RepeatCheckbox.isSelected());
+            evt.setTime(time);
+            evt.setBefore_at(before_at);
+            evt.setEvent_name(event_type);
+            //EventInfo newEvent = new EventInfo(, program.current_user, event_type, time,before_at, isRepeating);
+            program.db.updateEvent(evt);
+        }
     }
-
-    @FXML
-    private CheckBox runningAtCheckbox;
-    @FXML
-    private CheckBox runningAfterCheckbox;
 
 
     @FXML

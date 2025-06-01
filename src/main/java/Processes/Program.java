@@ -16,6 +16,7 @@ public class Program {
     public String system_user = System.getProperty("user.name");
     public Timer timer;
     public int current_user = 0;
+    public UserInfo user;
     public UI ui;
     public Program() {
 
@@ -104,4 +105,5 @@ public class Program {
             throw new RuntimeException(e);
         }
     }
+
 }

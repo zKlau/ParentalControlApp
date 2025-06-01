@@ -49,6 +49,10 @@ public class UI {
     @FXML
     private ListView<EventInfo> events;
 
+    @FXML
+    private Label currentUser;
+
+
     /**
      * MenuButton used to list and select users dynamically.
      */
@@ -69,14 +73,19 @@ public class UI {
      * @param program the {@link Program} instance initialized at application start.
      */
     public void onProgramReady(Program program) {
+
         this.primaryStage = (Stage) processes.getScene().getWindow();
         this.program = program;
         this.program.ui = this;
+
         ArrayList<UserInfo> users = program.db.getUsers();
         if (!users.isEmpty()) {
             populateUsersMenu(users);
-            populateProgramList(0);
+            populateProgramList(users.getFirst());
             program.allow_connection = true;
+            program.user = users.getFirst();
+            program.current_user = program.user.getId() - 1;
+            currentUser.setText("Current user: " + program.user.getName() + " (" + program.user.getId() + ")");
         } else {
             createUserWindow();
         }
@@ -166,10 +175,10 @@ public class UI {
     /**
      * Populates the {@code processes} and {@code events} ListViews with data belonging to the selected user.
      *
-     * @param user_id the ID of the selected user.
+     * @param user the Object of the selected user.
      */
-    public void populateProgramList(int user_id) {
-        // Processes
+    public void populateProgramList(UserInfo user) {
+        int user_id = user.getId() - 1;
         ArrayList<ProcessInfo> prs = program.db.getProcesses(user_id);
         processes.getItems().setAll(prs);
         processes.setCellFactory(listView -> new ListCell<>() {
@@ -194,7 +203,6 @@ public class UI {
             }
         });
 
-        // Events
         ArrayList<EventInfo> evts = program.db.getEvents(user_id);
         events.getItems().setAll(evts);
         events.setCellFactory(listView -> new ListCell<>() {
@@ -253,7 +261,7 @@ public class UI {
     /**
      * Placeholder method for editing an {@link EventInfo}.
      *
-     * @param evt the {@code EventInfo} object to be edited.
+     * @param item the {@code EventInfo} object to be edited.
      */
     private void eventEditMenu(EventInfo item) {
         try {
@@ -293,8 +301,10 @@ public class UI {
      */
     public void updateMenu() {
         populateUsersMenu(null);
-        populateProgramList(program.current_user);
+        populateProgramList(program.user);
     }
+
+
 
     /**
      * Populates the user selection menu with available users from the database.
@@ -305,13 +315,15 @@ public class UI {
         if (users == null) {
             users = program.db.getUsers();
         }
-
+        //currentUser.setText("Current user: " + users.get(program.current_user).getName() + " (" + users.get(program.current_user).getId() + ")");
         selectUsers.getItems().clear();
 
         for (UserInfo user : users) {
             MenuItem item = new MenuItem(user.getName());
             item.setOnAction(e -> {
                 program.current_user = user.getId() - 1;
+                program.user = user;
+                currentUser.setText("Current user: " + user.getName() + " (" + user.getId() + ")" );
                 updateMenu();
             });
             selectUsers.getItems().add(item);
@@ -346,6 +358,7 @@ public class UI {
      */
     @FXML
     public void deleteUser() {
+        program.db.deleteUser(program.user);
         System.out.println("Deleting user");
     }
 
@@ -373,11 +386,13 @@ public class UI {
     private AnchorPane processGroup;
     @FXML
     private AnchorPane eventsGroup;
-
+    @FXML
+    private AnchorPane userGroup;
     @FXML
     public void processesButtonPressed() {
         eventsGroup.setVisible(false);
         processGroup.setVisible(true);
+        userGroup.setVisible(false);
     }
 
 
@@ -385,11 +400,16 @@ public class UI {
     public void eventsButtonPressed() {
         processGroup.setVisible(false);
         eventsGroup.setVisible(true);
+        userGroup.setVisible(false);
+
     }
+
 
     @FXML
     public void usersButtonPressed() {
-
+        userGroup.setVisible(true);
+        processGroup.setVisible(false);
+        eventsGroup.setVisible(false);
     }
 
 

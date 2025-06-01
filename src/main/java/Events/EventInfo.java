@@ -5,6 +5,7 @@ public class EventInfo {
     private int user_id;
     private String event_name;
     private int time;
+    private boolean before_at;
     private boolean repeat;
 
     public EventInfo() {
@@ -13,6 +14,7 @@ public class EventInfo {
         this.event_name = "";
         this.time = 0;
         this.repeat = false;
+        this.before_at = false;
     }
     public EventInfo(int id, int user_id, String event_name, int time, boolean repeat) {
         this.id = id;
@@ -22,6 +24,22 @@ public class EventInfo {
         this.repeat = repeat;
     }
 
+    public EventInfo(int id, int user_id, String event_name, int time, boolean before_at, boolean repeat) {
+        this.id = id;
+        this.user_id = user_id;
+        this.event_name = event_name;
+        this.time = time;
+        this.before_at = before_at;
+        this.repeat = repeat;
+    }
+
+    public boolean isBefore_at() {
+        return before_at;
+    }
+
+    public void setBefore_at(boolean before_at) {
+        this.before_at = before_at;
+    }
 
     public int getId() {
         return id;

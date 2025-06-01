@@ -3,10 +3,12 @@ package GUI;
 import Processes.Program;
 import GUI.ResizeHelper;
 import javafx.application.Application;
+import javafx.application.Platform;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.layout.Region;
+import javafx.scene.paint.Color;
 import javafx.stage.Stage;
 import javafx.stage.StageStyle;
 import java.util.Objects;
@@ -37,8 +39,11 @@ public class MainUI extends Application {
         Parent root = loader.load();
 
         controller = loader.getController();
-        stage.initStyle(StageStyle.UNDECORATED);
+
+        stage.initStyle(StageStyle.TRANSPARENT);
+        //stage.initStyle(StageStyle.UNDECORATED);
         Scene scene = new Scene(root);
+        scene.setFill(Color.TRANSPARENT);
         scene.getStylesheets().add(getClass().getResource("/style.css").toExternalForm());
         stage.setTitle("ParentalControlApp");
         stage.setScene(scene);
@@ -48,7 +53,9 @@ public class MainUI extends Application {
 
         new Thread(() -> {
             Program program = new Program();
-            controller.onProgramReady(program);
+            Platform.runLater(() -> {
+                controller.onProgramReady(program);
+            });
         }).start();
 
         Runtime.getRuntime().addShutdownHook(new Thread(() -> {

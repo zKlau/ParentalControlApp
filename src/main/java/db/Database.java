@@ -71,6 +71,7 @@ public class Database {
                     USER_ID INTEGER NOT NULL,
                     EVENT_NAME TEXT NOT NULL,
                     TIME INTEGER NOT NULL,
+                    BEFORE_AT INTEGER NOT NULL,
                     REPEAT INTEGER NOT NULL,
                     FOREIGN KEY (USER_ID) REFERENCES Users(ID)
                 );
@@ -115,14 +116,13 @@ public class Database {
      * @param task A {@code Runnable} task to be executed.
      */
     private void executeDatabaseTask(Runnable task) {
-        taskQueue.add(task); // Add the task to the queue
+        taskQueue.add(task);
     }
 
     /**
      * Adds a new process to the database for a specific user.
      *
-     * @param name    The name of the process.
-     * @param user_id The ID of the user the process belongs to.
+     * @param prs    The Object of the process.
      */
     public void addProcess(ProcessInfo prs) {
         executeDatabaseTask(() -> {
@@ -347,7 +347,7 @@ public class Database {
             executeDatabaseTask(() -> {
                 try (PreparedStatement stmt = con.prepareStatement("INSERT INTO Users (NAME,IP) VALUES (?,?)")) {
                     stmt.setString(1, name);
-                    stmt.setString(2,"192.168.1.100");
+                    stmt.setString(2,"192.168.1.1");
                     stmt.executeUpdate();
                     System.out.println("User created: " + name);
 
@@ -360,6 +360,53 @@ public class Database {
         return false;
     }
 
+
+    public synchronized void deleteUser(UserInfo user) {
+        executeDatabaseTask(() -> {
+            try {
+                int userId = user.getId()-1;
+
+                ArrayList<Integer> processIds = new ArrayList<>();
+                try (PreparedStatement getProcesses = con.prepareStatement(
+                        "SELECT ID FROM Processes WHERE User_ID = ?")) {
+                    getProcesses.setInt(1, userId);
+                    ResultSet rs = getProcesses.executeQuery();
+                    while (rs.next()) {
+                        processIds.add(rs.getInt("ID"));
+                    }
+                }
+
+                try (PreparedStatement deleteTimeLimits = con.prepareStatement(
+                        "DELETE FROM TimeLimits WHERE Process_ID = ?")) {
+                    for (int processId : processIds) {
+                        deleteTimeLimits.setInt(1, processId);
+                        deleteTimeLimits.executeUpdate();
+                    }
+                }
+
+                try (PreparedStatement deleteEvents = con.prepareStatement(
+                        "DELETE FROM Events WHERE User_ID = ?")) {
+                    deleteEvents.setInt(1, userId);
+                    deleteEvents.executeUpdate();
+                }
+
+                try (PreparedStatement deleteProcesses = con.prepareStatement(
+                        "DELETE FROM Processes WHERE User_ID = ?")) {
+                    deleteProcesses.setInt(1, userId);
+                    deleteProcesses.executeUpdate();
+                }
+
+                try (PreparedStatement deleteUser = con.prepareStatement(
+                        "DELETE FROM Users WHERE ID = ?")) {
+                    deleteUser.setInt(1, userId+1);
+                    deleteUser.executeUpdate();
+                }
+
+            } catch (SQLException e) {
+                throw new RuntimeException(e);
+            }
+        });
+    }
     public void updateProcess(ProcessInfo prs) {
         executeDatabaseTask(() -> {
             try (PreparedStatement stmt = con.prepareStatement("UPDATE Processes SET PROCESS_NAME = ? WHERE ID = ?")) {
@@ -396,11 +443,12 @@ public class Database {
                 }
 
                 try (PreparedStatement insertStmt = con.prepareStatement(
-                        "INSERT INTO Events (USER_ID, EVENT_NAME, TIME,REPEAT) VALUES (?, ?, ?,?)")) {
+                        "INSERT INTO Events (USER_ID, EVENT_NAME,TIME, BEFORE_AT, REPEAT) VALUES (?, ?, ?,?,?)")) {
                     insertStmt.setInt(1, evt.getUser_id());
                     insertStmt.setString(2, evt.getEvent_name());
                     insertStmt.setInt(3, evt.getTime());
-                    insertStmt.setInt(4,evt.isRepeat() ? 1 : 0);
+                    insertStmt.setInt(4, evt.isBefore_at() ? 1 : 0);
+                    insertStmt.setInt(5,evt.isRepeat() ? 1 : 0);
                     insertStmt.executeUpdate();
                     System.out.println("Event added: " + evt.getEvent_name ());
                 }
@@ -441,6 +489,7 @@ public class Database {
                         rs.getInt("USER_ID"),
                         rs.getString("EVENT_NAME"),
                         rs.getInt("TIME"),
+                        rs.getInt("BEFORE_AT") == 1,
                         rs.getInt("REPEAT") == 1
                 );
                 events.add(evt);
@@ -459,11 +508,12 @@ public class Database {
     public void updateEvent(EventInfo evt) {
         executeDatabaseTask(() -> {
             try (PreparedStatement stmt = con.prepareStatement(
-                    "UPDATE Events SET EVENT_NAME = ?, TIME = ?, REPEAT = ? WHERE ID = ?")) {
+                    "UPDATE Events SET EVENT_NAME = ?, TIME = ?,BEFORE_AT = ?, REPEAT = ? WHERE ID = ?")) {
                 stmt.setString(1, evt.getEvent_name());
                 stmt.setInt(2, evt.getTime());
-                stmt.setInt(3, evt.isRepeat() ? 1 : 0);
-                stmt.setInt(4, evt.getId());
+                stmt.setInt(4, evt.isRepeat() ? 1 : 0);
+                stmt.setInt(3, evt.isBefore_at() ? 1 : 0);
+                stmt.setInt(5, evt.getId());
                 stmt.executeUpdate();
                 System.out.println("Event updated: " + evt.getEvent_name());
             } catch (SQLException e) {
@@ -471,5 +521,8 @@ public class Database {
             }
         });
     }
+
+
+
 
 }
