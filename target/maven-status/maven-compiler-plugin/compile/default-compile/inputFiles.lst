@@ -1,12 +1,13 @@
 E:\Projects\ParentalControlApp\src\main\java\GUI\ResizeHelper.java
-E:\Projects\ParentalControlApp\src\main\java\Processes\Program.java
 E:\Projects\ParentalControlApp\src\main\java\GUI\UI.java
 E:\Projects\ParentalControlApp\src\main\java\Events\EventInfo.java
 E:\Projects\ParentalControlApp\src\main\java\Events\Notification.java
 E:\Projects\ParentalControlApp\src\main\java\db\Database.java
+E:\Projects\ParentalControlApp\src\main\java\Processes\ProcessInfo.java
+E:\Projects\ParentalControlApp\src\main\java\GUI\processEditController.java
+E:\Projects\ParentalControlApp\src\main\java\Processes\Program.java
 E:\Projects\ParentalControlApp\src\main\java\GUI\MainUI.java
 E:\Projects\ParentalControlApp\src\main\java\GUI\eventEditController.java
 E:\Projects\ParentalControlApp\src\main\java\Processes\UserInfo.java
 E:\Projects\ParentalControlApp\src\main\java\GUI\CreateUserController.java
-E:\Projects\ParentalControlApp\src\main\java\Processes\ProcessInfo.java
-E:\Projects\ParentalControlApp\src\main\java\GUI\processEditController.java
+E:\Projects\ParentalControlApp\src\main\java\Processes\WebFilter.java

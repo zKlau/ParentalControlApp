@@ -246,7 +246,33 @@ public class Database {
 
         return 0;
     }
+    public synchronized ArrayList<ProcessInfo> getURLS(UserInfo user) {
+        ArrayList<ProcessInfo> resArray = new ArrayList<>();
+        try {
+            PreparedStatement checkQuery = con.prepareStatement(
+                    "SELECT * FROM Processes WHERE USER_ID = ? AND " +
+                            "(process_name LIKE '%.com%' OR process_name LIKE '%.net%' OR process_name LIKE '%.org%' OR process_name LIKE '%.edu%')"
+            );
+            checkQuery.setInt(1, user.getId()-1);
+            ResultSet rs = checkQuery.executeQuery();
 
+            while (rs.next()) {
+                int id = rs.getInt("ID");
+                int userId = rs.getInt("USER_ID");
+                String processName = rs.getString("Process_name");
+                int totalTime = rs.getInt("TOTAL_TIME");
+                int timeLimit = getTimeLimit(id);
+                resArray.add(new ProcessInfo(id, userId, processName, totalTime, timeLimit));
+            }
+
+            rs.close();
+            checkQuery.close();
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+
+        return resArray;
+    }
 
     /**
      * Retrieves the currently tracked time for a specific process.

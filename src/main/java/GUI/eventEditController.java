@@ -8,6 +8,7 @@ import javafx.fxml.FXML;
 import javafx.scene.Group;
 import javafx.scene.control.*;
 import javafx.stage.FileChooser;
+import javafx.stage.Stage;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -107,6 +108,8 @@ public class eventEditController{
             //EventInfo newEvent = new EventInfo(, program.current_user, event_type, time,before_at, isRepeating);
             program.db.updateEvent(evt);
         }
+        Stage stage = (Stage) runningAfterCheckbox.getScene().getWindow();
+        stage.close();
     }
 
 
@@ -132,6 +135,8 @@ public class eventEditController{
     @FXML
     public void removeEvent() {
         program.db.removeEvent(evt);
+        Stage stage = (Stage) runningAfterCheckbox.getScene().getWindow();
+        stage.close();
     }
 
 }

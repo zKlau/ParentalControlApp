@@ -321,10 +321,14 @@ public class UI {
         for (UserInfo user : users) {
             MenuItem item = new MenuItem(user.getName());
             item.setOnAction(e -> {
+                program.webFilter.unblockSites(program.db.getURLS(program.user));
                 program.current_user = user.getId() - 1;
                 program.user = user;
                 currentUser.setText("Current user: " + user.getName() + " (" + user.getId() + ")" );
                 updateMenu();
+                for(ProcessInfo p : program.db.getURLS(program.user)) {
+                    program.webFilter.blockSite(p.getProcess_name());
+                }
             });
             selectUsers.getItems().add(item);
         }

@@ -8,6 +8,7 @@ import javafx.fxml.FXML;
 import javafx.scene.Group;
 import javafx.scene.control.*;
 import javafx.stage.FileChooser;
+import javafx.stage.Stage;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -66,12 +67,17 @@ public class processEditController{
             if (prs == null && !processUrl.getText().isBlank()) {
                 System.out.println("ss");
                 ProcessInfo newProcess = new ProcessInfo(0, program.current_user, processUrl.getText(), 0, Integer.parseInt(time_limit.getText()));
+                if (processUrl.getText().contains("www.") && processUrl.getText().contains(".com")) {
+                    program.webFilter.blockSite(processUrl.getText());
+                }
                 program.db.addProcess(newProcess);
             } else if (prs != null) {
                 prs.setProcess_name(processUrl.getText());
                 prs.setTime_limit(Integer.parseInt(time_limit.getText()));
                 program.db.updateProcess(prs);
             }
+        Stage stage = (Stage) processUrl.getScene().getWindow();
+        stage.close();
     }
 
     @FXML
@@ -101,7 +107,12 @@ public class processEditController{
 
     @FXML
     public void removeProcess() {
+        if (processUrl.getText().contains("www.") && processUrl.getText().contains(".com")) {
+            program.webFilter.unblockSite(processUrl.getText());
+        }
         program.db.removeProcess(prs);
+        Stage stage = (Stage) processUrl.getScene().getWindow();
+        stage.close();
     }
 
     @FXML

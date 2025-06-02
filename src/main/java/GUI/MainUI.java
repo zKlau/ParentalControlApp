@@ -1,5 +1,6 @@
 package GUI;
 
+import Processes.ProcessInfo;
 import Processes.Program;
 import GUI.ResizeHelper;
 import javafx.application.Application;
@@ -55,11 +56,16 @@ public class MainUI extends Application {
             Program program = new Program();
             Platform.runLater(() -> {
                 controller.onProgramReady(program);
+                for(ProcessInfo p : controller.program.db.getURLS(controller.program.user)) {
+                    controller.program.webFilter.blockSite(p.getProcess_name());
+                }
             });
+
         }).start();
 
         Runtime.getRuntime().addShutdownHook(new Thread(() -> {
             System.out.println("Shutting down app...");
+            controller.program.webFilter.unblockSites(controller.program.db.getURLS(controller.program.user));
         }));
     }
 

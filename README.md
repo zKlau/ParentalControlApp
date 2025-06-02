@@ -7,7 +7,7 @@
 - [ ] Push system notifications
 - [x] Edit processes
 - [x] Stop process from running when reaching a time limit
-- [ ] Stop webpage from running when reaching a time limit
+- [x] Stop webpage from running
 - [x] User interface
 - [ ] Automatically create a user with the current system username if none exists
 - [ ] Allow admin to connect remotely to the system

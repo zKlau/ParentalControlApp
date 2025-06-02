@@ -18,11 +18,12 @@ public class Program {
     public int current_user = 0;
     public UserInfo user;
     public UI ui;
+    public WebFilter webFilter = new WebFilter();
     public Program() {
 
-        //db.addProcess("msedge.exe", 0);
-        //db.setTimeLimit(1, 50);
         Timer timer = new Timer(true);
+        //webFilter.blockSite("www.facebook.com");
+
 
         timer.scheduleAtFixedRate(new TimerTask() {
             @Override

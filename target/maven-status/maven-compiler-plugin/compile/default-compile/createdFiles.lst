@@ -2,12 +2,14 @@ Processes\ProcessInfo.class
 GUI\UI$2.class
 GUI\ResizeHelper.class
 GUI\MainUI.class
+Processes\WebFilter.class
 GUI\CreateUserController.class
 GUI\processEditController.class
 Processes\Program.class
 db\Database.class
 GUI\UI$1.class
 Events\EventInfo.class
+Events\Notification.class
 Processes\Program$1.class
 GUI\UI.class
 GUI\eventEditController.class
