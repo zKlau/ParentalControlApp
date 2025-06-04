@@ -12,6 +12,9 @@ import javafx.scene.layout.Region;
 import javafx.scene.paint.Color;
 import javafx.stage.Stage;
 import javafx.stage.StageStyle;
+
+import java.awt.*;
+import java.net.URL;
 import java.util.Objects;
 
 /**
@@ -36,6 +39,7 @@ public class MainUI extends Application {
      */
     @Override
     public void start(Stage stage) throws Exception {
+        System.setProperty("java.awt.headless", "false");
         FXMLLoader loader = new FXMLLoader(getClass().getResource("/main.fxml"));
         Parent root = loader.load();
 
@@ -49,8 +53,9 @@ public class MainUI extends Application {
         stage.setTitle("ParentalControlApp");
         stage.setScene(scene);
         stage.show();
+        Platform.setImplicitExit(false);
         ResizeHelper.addResizeListener(stage, (Region) root);
-
+        addAppToTray(stage);
 
         new Thread(() -> {
             Program program = new Program();
@@ -88,5 +93,52 @@ public class MainUI extends Application {
     public void stop() throws Exception {
         System.out.println("Application is stopping...");
         System.exit(0);
+    }
+
+    private void addAppToTray(Stage stage) {
+        if (!SystemTray.isSupported()) {
+            System.out.println("System tray not supported!");
+            return;
+        }
+
+        try {
+            Toolkit.getDefaultToolkit();
+
+            URL imageUrl = getClass().getResource("/Images/icon.png");
+            Image image = Toolkit.getDefaultToolkit().getImage(imageUrl);
+
+            final PopupMenu popup = new PopupMenu();
+            final TrayIcon trayIcon = new TrayIcon(image, "ParentalControlApp", popup);
+            trayIcon.setImageAutoSize(true);
+
+            MenuItem openItem = new MenuItem("Open");
+            openItem.addActionListener(e -> Platform.runLater(() -> {
+                stage.show();
+                stage.toFront();
+            }));
+
+            MenuItem exitItem = new MenuItem("Exit");
+            exitItem.addActionListener(e -> {
+                SystemTray.getSystemTray().remove(trayIcon);
+                Platform.exit();
+                System.exit(0);
+            });
+
+            popup.add(openItem);
+            popup.addSeparator();
+            popup.add(exitItem);
+
+            SystemTray.getSystemTray().add(trayIcon);
+
+            Platform.runLater(() -> {
+                stage.setOnCloseRequest(event -> {
+                    event.consume();
+                    stage.hide();
+                });
+            });
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 }

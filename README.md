@@ -3,15 +3,20 @@
 - [x] Add processes and urls to track for each user
 - [x] Create and Edit system events
 - [x] Track time for each process
-- [ ] Track time for each url
+- [ ] Track time for each url (not priority for now)
 - [ ] Push system notifications
 - [x] Edit processes
 - [x] Stop process from running when reaching a time limit
 - [x] Stop webpage from running
 - [x] User interface
 - [ ] Automatically create a user with the current system username if none exists
+- [ ] Automatically switch active user to the current system user
 - [ ] Allow admin to connect remotely to the system
 - [ ] Track total time spend on each process on the system
+- [ ] Lock system between hour x and y
+- [ ] Lock system after n hours screen time
+- [ ] Show app in system tray
+
 ## Setup
 
 > Make sure you have Java 21+ and Maven installed and properly configured in your environment.

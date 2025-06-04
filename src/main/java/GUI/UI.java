@@ -146,7 +146,7 @@ public class UI {
 
     @FXML
     public void closeWindow() {
-        Platform.exit();
+        primaryStage.hide();
     }
 
     /**
