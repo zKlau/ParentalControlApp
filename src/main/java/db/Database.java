@@ -3,8 +3,16 @@ import Events.EventInfo;
 import Processes.ProcessInfo;
 import Processes.UserInfo;
 
+import javax.crypto.SecretKeyFactory;
+import javax.crypto.spec.PBEKeySpec;
+import java.security.NoSuchAlgorithmException;
+import java.security.SecureRandom;
+import java.security.spec.InvalidKeySpecException;
+import java.security.spec.KeySpec;
 import java.sql.*;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Base64;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 /**
@@ -74,6 +82,10 @@ public class Database {
                     BEFORE_AT INTEGER NOT NULL,
                     REPEAT INTEGER NOT NULL,
                     FOREIGN KEY (USER_ID) REFERENCES Users(ID)
+                );
+                CREATE TABLE IF NOT EXISTS Admin (
+                    ID INTEGER PRIMARY KEY AUTOINCREMENT,
+                    PASSWORD TEXT NOT NULL
                 );
             """);
             System.out.println("Database successfully created");
@@ -547,6 +559,58 @@ public class Database {
             }
         });
     }
+
+    public boolean checkPassword(String pass) {
+        try (PreparedStatement stmt = con.prepareStatement("SELECT * FROM ADMIN")) {
+            ResultSet rs = stmt.executeQuery();
+            if (rs.next()) {
+                String storedEncoded = rs.getString("PASSWORD");
+                byte[] combined = Base64.getDecoder().decode(storedEncoded);
+                HashedPassword stored = HashedPassword.fromBytes(combined);
+
+                KeySpec spec = new PBEKeySpec(pass.toCharArray(), stored.getSalt(), 65536, 128);
+                SecretKeyFactory f = SecretKeyFactory.getInstance("PBKDF2WithHmacSHA1");
+                byte[] computedHash = f.generateSecret(spec).getEncoded();
+
+                return Arrays.equals(stored.getHash(), computedHash);
+            } else {
+                addPassword(pass);
+                return true;
+            }
+        } catch (SQLException | NoSuchAlgorithmException | InvalidKeySpecException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    public HashedPassword hashPassword(String pass) {
+        try {
+            SecureRandom random = new SecureRandom();
+            byte[] salt = new byte[16];
+            random.nextBytes(salt);
+
+            KeySpec spec = new PBEKeySpec(pass.toCharArray(), salt, 65536, 128);
+            SecretKeyFactory f = SecretKeyFactory.getInstance("PBKDF2WithHmacSHA1");
+            byte[] hash = f.generateSecret(spec).getEncoded();
+
+            return new HashedPassword(salt, hash);
+        } catch (NoSuchAlgorithmException | InvalidKeySpecException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    public synchronized void addPassword(String pass) {
+        executeDatabaseTask(() -> {
+            try (PreparedStatement stmt = con.prepareStatement("INSERT INTO ADMIN(PASSWORD) VALUES(?)")) {
+                HashedPassword hp = hashPassword(pass);
+                String encoded = Base64.getEncoder().encodeToString(hp.toBytes());
+                stmt.setString(1, encoded);
+                stmt.executeUpdate();
+            } catch (SQLException e) {
+                throw new RuntimeException(e);
+            }
+        });
+    }
+
 
 
 

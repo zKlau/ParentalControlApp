@@ -5,6 +5,7 @@ import Processes.Program;
 import GUI.ResizeHelper;
 import javafx.application.Application;
 import javafx.application.Platform;
+import javafx.fxml.FXML;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.fxml.FXMLLoader;
@@ -14,6 +15,7 @@ import javafx.stage.Stage;
 import javafx.stage.StageStyle;
 
 import java.awt.*;
+import java.io.IOException;
 import java.net.URL;
 import java.util.Objects;
 
@@ -29,7 +31,10 @@ public class MainUI extends Application {
      * the UI components and the backend logic.
      */
     private UI controller;
+    private Program program;
+    private Stage pinStage;
 
+    public TrayIcon trayIcon;
     /**
      * Starts the JavaFX application by loading the primary FXML file, initializing
      * the {@code UI} controller, and setting up the main application window.
@@ -39,12 +44,44 @@ public class MainUI extends Application {
      */
     @Override
     public void start(Stage stage) throws Exception {
+        this.program = new Program();
         System.setProperty("java.awt.headless", "false");
+        displayPIN(stage);
+
+    }
+
+    public Program getProgram() {
+        return program;
+    }
+
+    public void displayPIN(Stage stage) {
+        try {
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/pinMenu.fxml"));
+            Parent root = loader.load();
+            this.pinStage = stage;
+
+            Object controller = loader.getController();
+            if (controller instanceof PasswordController passController) {
+                passController.setMainApp(this);
+            }
+
+            Scene scene = new Scene(root);
+            scene.getStylesheets().add(getClass().getResource("/style.css").toExternalForm());
+            stage.setTitle("ParentalControlApp");
+            stage.setScene(scene);
+            stage.show();
+
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    public void displayMainWindow() throws IOException {
         FXMLLoader loader = new FXMLLoader(getClass().getResource("/main.fxml"));
         Parent root = loader.load();
 
         controller = loader.getController();
-
+        Stage stage = new Stage();
         stage.initStyle(StageStyle.TRANSPARENT);
         //stage.initStyle(StageStyle.UNDECORATED);
         Scene scene = new Scene(root);
@@ -58,7 +95,7 @@ public class MainUI extends Application {
         addAppToTray(stage);
 
         new Thread(() -> {
-            Program program = new Program();
+
             Platform.runLater(() -> {
                 controller.onProgramReady(program);
                 for(ProcessInfo p : controller.program.db.getURLS(controller.program.user)) {
@@ -73,7 +110,6 @@ public class MainUI extends Application {
             controller.program.webFilter.unblockSites(controller.program.db.getURLS(controller.program.user));
         }));
     }
-
     /**
      * The main method serves as the entry point for the application.
      * It delegates execution to the JavaFX platform's {@code launch()} method.
@@ -104,29 +140,35 @@ public class MainUI extends Application {
         try {
             Toolkit.getDefaultToolkit();
 
+            if (trayIcon != null) {
+                System.out.println("Tray icon already exists");
+                return;
+            }
+
             URL imageUrl = getClass().getResource("/Images/icon.png");
             Image image = Toolkit.getDefaultToolkit().getImage(imageUrl);
 
             final PopupMenu popup = new PopupMenu();
-            final TrayIcon trayIcon = new TrayIcon(image, "ParentalControlApp", popup);
+            trayIcon = new TrayIcon(image, "ParentalControlApp", popup);
             trayIcon.setImageAutoSize(true);
 
             MenuItem openItem = new MenuItem("Open");
             openItem.addActionListener(e -> Platform.runLater(() -> {
-                stage.show();
-                stage.toFront();
+                if (pinStage != null) {
+                    pinStage.show();
+                    pinStage.toFront();
+                } else {
+                    try {
+                        Stage newStage = new Stage();
+                        displayPIN(newStage);
+                    } catch (Exception ex) {
+                        ex.printStackTrace();
+                    }
+                }
             }));
-
-            MenuItem exitItem = new MenuItem("Exit");
-            exitItem.addActionListener(e -> {
-                SystemTray.getSystemTray().remove(trayIcon);
-                Platform.exit();
-                System.exit(0);
-            });
 
             popup.add(openItem);
             popup.addSeparator();
-            popup.add(exitItem);
 
             SystemTray.getSystemTray().add(trayIcon);
 
@@ -140,5 +182,25 @@ public class MainUI extends Application {
         } catch (Exception e) {
             e.printStackTrace();
         }
+    }
+
+    public void hidePINWindowAndShowMain() {
+        if (pinStage != null) {
+            pinStage.hide();
+        }
+
+        Platform.runLater(() -> {
+            try {
+                displayMainWindow();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        });
+    }
+
+    @FXML
+    public void verifyPassword() {
+        System.out.println("Verifying PIN");
+        hidePINWindowAndShowMain();
     }
 }
