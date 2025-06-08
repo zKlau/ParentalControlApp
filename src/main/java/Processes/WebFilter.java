@@ -24,7 +24,7 @@ public class WebFilter {
             String url = normalizeDomain(rawUrl);
             List<String> lines = Files.readAllLines(Paths.get(hostsFile));
 
-            String entry1 = "127.0.0.1 " + url;
+            String entry1 = System.lineSeparator()+ "127.0.0.1 " + url;
             String entry2 = "127.0.0.1 www." + url;
 
             boolean alreadyBlocked = lines.stream().anyMatch(line ->
@@ -49,12 +49,11 @@ public class WebFilter {
             String url = normalizeDomain(rawUrl);
             Path path = Paths.get(hostsFile);
             List<String> lines = new ArrayList<>(Files.readAllLines(path));
-            Iterator<String> iterator = lines.iterator();
 
-            while (iterator.hasNext()) {
-                String line = iterator.next().trim();
-                if (line.equals("127.0.0.1 " + url) || line.equals("127.0.0.1 www." + url)) {
-                    iterator.remove();
+            for (String i : lines) {
+                String line = i.trim();
+                if (i.equals("127.0.0.1 " + url) || line.equals("127.0.0.1 www." + url)) {
+                    lines.remove(i);
                     System.out.println("Unblocked: " + rawUrl);
                 }
             }
@@ -67,7 +66,7 @@ public class WebFilter {
 
     public void unblockSites(List<ProcessInfo> processList) {
         try {
-            System.out.println("unblocking WEBSITES " + processList.size() + " entries");
+            System.out.println("Unblocking WEBSITES " + processList.size() + " entries");
             Path path = Paths.get(hostsFile);
             List<String> lines = new ArrayList<>(Files.readAllLines(path));
             Set<String> domainsToUnblock = new HashSet<>();
@@ -81,15 +80,12 @@ public class WebFilter {
             lines.removeIf(line -> domainsToUnblock.contains(line.trim()));
 
             Files.write(path, lines, StandardOpenOption.TRUNCATE_EXISTING);
-            System.out.println("Batch unblocked: " + processList.size() + " entries");
+            System.out.println("Websites Unblocked: " + processList.size() + " entries");
         } catch (IOException e) {
             throw new RuntimeException("Access denied to hosts file. Run as administrator.", e);
         }
     }
 
-    /**
-     * Normalize domain by removing protocols, slashes, and ensuring no "www." prefix
-     */
     private String normalizeDomain(String url) {
         if (url == null || url.isEmpty()) return "";
 
