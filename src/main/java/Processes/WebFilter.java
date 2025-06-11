@@ -4,10 +4,29 @@ import java.io.IOException;
 import java.nio.file.*;
 import java.util.*;
 
+/**
+ * The {@code WebFilter} class provides methods to block and unblock websites
+ * by modifying the system's hosts file. It is used to enforce web restrictions
+ * for users in the Parental Control App.
+ * <p>
+ * This class supports blocking/unblocking individual sites or lists of sites,
+ * and automatically detects the correct hosts file path for Windows, macOS, and Linux.
+ * </p>
+ *
+ * @author Claudiu Padure
+ * @version 1.0
+ */
 public class WebFilter {
 
+    /**
+     * The path to the system's hosts file.
+     */
     private final String hostsFile;
 
+    /**
+     * Constructs a {@code WebFilter} and determines the correct hosts file path
+     * based on the operating system.
+     */
     public WebFilter() {
         String OS = System.getProperty("os.name").toLowerCase();
         if (OS.contains("win")) {
@@ -19,12 +38,17 @@ public class WebFilter {
         }
     }
 
+    /**
+     * Blocks a website by adding entries to the hosts file.
+     *
+     * @param rawUrl The URL or domain to block.
+     */
     public void blockSite(String rawUrl) {
         try {
             String url = normalizeDomain(rawUrl);
             List<String> lines = Files.readAllLines(Paths.get(hostsFile));
 
-            String entry1 = System.lineSeparator()+ "127.0.0.1 " + url;
+            String entry1 = System.lineSeparator() + "127.0.0.1 " + url;
             String entry2 = "127.0.0.1 www." + url;
 
             boolean alreadyBlocked = lines.stream().anyMatch(line ->
@@ -44,6 +68,11 @@ public class WebFilter {
         }
     }
 
+    /**
+     * Unblocks a website by removing its entries from the hosts file.
+     *
+     * @param rawUrl The URL or domain to unblock.
+     */
     public void unblockSite(String rawUrl) {
         try {
             String url = normalizeDomain(rawUrl);
@@ -64,6 +93,11 @@ public class WebFilter {
         }
     }
 
+    /**
+     * Unblocks a list of websites by removing their entries from the hosts file.
+     *
+     * @param processList The list of {@link ProcessInfo} objects representing sites to unblock.
+     */
     public void unblockSites(List<ProcessInfo> processList) {
         try {
             System.out.println("Unblocking WEBSITES " + processList.size() + " entries");
@@ -86,6 +120,12 @@ public class WebFilter {
         }
     }
 
+    /**
+     * Normalizes a URL or domain by removing protocol, "www.", and path components.
+     *
+     * @param url The raw URL or domain.
+     * @return The normalized domain.
+     */
     private String normalizeDomain(String url) {
         if (url == null || url.isEmpty()) return "";
 

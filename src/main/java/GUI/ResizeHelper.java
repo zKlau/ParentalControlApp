@@ -4,9 +4,30 @@ import javafx.scene.Cursor;
 import javafx.scene.layout.Region;
 import javafx.stage.Stage;
 
+/**
+ * The {@code ResizeHelper} class provides utility methods to enable custom window resizing
+ * for undecorated JavaFX stages. It attaches mouse listeners to a {@link Region} to allow
+ * resizing the window by dragging its edges or corners.
+ * <p>
+ * This is useful for applications with custom window decorations that need manual resize logic.
+ * </p>
+ *
+ * @author Claudiu Padure
+ * @version 1.0
+ */
 public class ResizeHelper {
+    /**
+     * The margin (in pixels) from the window edge where resizing is enabled.
+     */
     private static final int RESIZE_MARGIN = 10;
 
+    /**
+     * Adds mouse listeners to the specified {@link Region} to allow resizing the given {@link Stage}.
+     * The cursor changes to indicate the resize direction when hovering near the window edges or corners.
+     *
+     * @param stage The JavaFX {@link Stage} to resize.
+     * @param root  The {@link Region} to attach the resize listeners to.
+     */
     public static void addResizeListener(Stage stage, Region root) {
         root.setOnMouseMoved(event -> {
             double mouseX = event.getX();

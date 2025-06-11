@@ -23,12 +23,17 @@ import javafx.stage.Stage;
 
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.transform.Scale;
-import jdk.jfr.Event;
 
 /**
  * The {@code UI} class is responsible for managing the graphical user interface logic of the application.
  * It is integrated with JavaFX and communicates with the {@link Program} backend to manage users, processes,
  * and event data for display and editing.
+ * <p>
+ * This class handles user switching, process and event editing, and dynamic updates to the UI.
+ * </p>
+ *
+ * @author Claudiu Padure
+ * @version 1.0
  */
 public class UI {
 
@@ -52,7 +57,6 @@ public class UI {
     @FXML
     private Label currentUser;
 
-
     /**
      * MenuButton used to list and select users dynamically.
      */
@@ -65,15 +69,14 @@ public class UI {
 
     @FXML
     private HBox topBarPane;
+
     /**
-     * This method is called when the {@link Program} instance is ready and connected.
-     * It attempts to load existing users and initialize their associated data (processes/events),
-     * or prompts to create a new user if none exist.
+     * Called when the {@link Program} instance is ready and connected.
+     * Loads users, initializes their data, or prompts to create a new user if none exist.
      *
      * @param program the {@link Program} instance initialized at application start.
      */
     public void onProgramReady(Program program) {
-
         this.primaryStage = (Stage) processes.getScene().getWindow();
         this.program = program;
         this.program.ui = this;
@@ -89,17 +92,20 @@ public class UI {
         } else {
             createUserWindow();
         }
-
-
     }
 
-
+    /**
+     * Handles mouse press event for window dragging.
+     */
     @FXML
     public void windowPressed(javafx.scene.input.MouseEvent event) {
         xOffset = event.getSceneX();
         yOffset = event.getSceneY();
     }
 
+    /**
+     * Handles mouse drag event for window dragging.
+     */
     @FXML
     public void windowDragged(javafx.scene.input.MouseEvent event) {
         Stage stage = (Stage) ((HBox) event.getSource()).getScene().getWindow();
@@ -109,6 +115,9 @@ public class UI {
         }
     }
 
+    /**
+     * Minimizes the main application window.
+     */
     @FXML
     public void minimizeWindow() {
         primaryStage.setIconified(true);
@@ -117,6 +126,9 @@ public class UI {
     private boolean isMaximized = false;
     private double prevX, prevY, prevWidth, prevHeight;
 
+    /**
+     * Maximizes or restores the main application window.
+     */
     @FXML
     public void maximizeWindow() {
         if (!isMaximized) {
@@ -143,7 +155,9 @@ public class UI {
         }
     }
 
-
+    /**
+     * Hides the main application window.
+     */
     @FXML
     public void closeWindow() {
         primaryStage.hide();
@@ -259,9 +273,9 @@ public class UI {
     }
 
     /**
-     * Placeholder method for editing an {@link EventInfo}.
+     * Opens an editing window for the selected {@link EventInfo}. If null, creates a new event.
      *
-     * @param item the {@code EventInfo} object to be edited.
+     * @param item the {@code EventInfo} object to be edited or {@code null} to create a new one.
      */
     private void eventEditMenu(EventInfo item) {
         try {
@@ -304,8 +318,6 @@ public class UI {
         populateProgramList(program.user);
     }
 
-
-
     /**
      * Populates the user selection menu with available users from the database.
      *
@@ -315,7 +327,6 @@ public class UI {
         if (users == null) {
             users = program.db.getUsers();
         }
-        //currentUser.setText("Current user: " + users.get(program.current_user).getName() + " (" + users.get(program.current_user).getId() + ")");
         selectUsers.getItems().clear();
 
         for (UserInfo user : users) {
@@ -343,6 +354,10 @@ public class UI {
         processEditMenu(null);
     }
 
+    /**
+     * Handles the action for adding a new event entry.
+     * This will open the event editing window in "create" mode.
+     */
     @FXML
     public void addEvent() {
         eventEditMenu(null);
@@ -358,7 +373,6 @@ public class UI {
 
     /**
      * Deletes the currently selected user.
-     * Placeholder for delete logic (to be implemented).
      */
     @FXML
     public void deleteUser() {
@@ -385,13 +399,16 @@ public class UI {
         }
     }
 
-
     @FXML
     private AnchorPane processGroup;
     @FXML
     private AnchorPane eventsGroup;
     @FXML
     private AnchorPane userGroup;
+
+    /**
+     * Shows the processes group and hides the others.
+     */
     @FXML
     public void processesButtonPressed() {
         eventsGroup.setVisible(false);
@@ -399,22 +416,23 @@ public class UI {
         userGroup.setVisible(false);
     }
 
-
+    /**
+     * Shows the events group and hides the others.
+     */
     @FXML
     public void eventsButtonPressed() {
         processGroup.setVisible(false);
         eventsGroup.setVisible(true);
         userGroup.setVisible(false);
-
     }
 
-
+    /**
+     * Shows the users group and hides the others.
+     */
     @FXML
     public void usersButtonPressed() {
         userGroup.setVisible(true);
         processGroup.setVisible(false);
         eventsGroup.setVisible(false);
     }
-
-
 }

@@ -16,15 +16,66 @@ import java.util.ArrayList;
 import java.util.Timer;
 import java.util.TimerTask;
 
+/**
+ * The {@code Program} class serves as the core logic and backend for the Parental Control App.
+ * It manages user sessions, process monitoring, event scheduling, and interaction with the database.
+ * <p>
+ * This class is responsible for:
+ * <ul>
+ *   <li>Periodic monitoring of user processes and enforcing time limits</li>
+ *   <li>Scheduling and executing user events (shutdown, logout, screenshot, etc.)</li>
+ *   <li>Managing the current user and UI state</li>
+ *   <li>Providing utility methods for process management</li>
+ * </ul>
+ * </p>
+ *
+ * @author Claudiu Padure
+ * @version 1.0
+ */
 public class Program {
+    /**
+     * Singleton instance of the {@link Database}.
+     */
     public static Database db = Database.getInstance();
+
+    /**
+     * Indicates whether connections are allowed (used for UI state).
+     */
     public boolean allow_connection = true;
+
+    /**
+     * The system username of the current OS user.
+     */
     public String system_user = System.getProperty("user.name");
+
+    /**
+     * Timer for scheduling periodic process and event checks.
+     */
     public Timer timer;
+
+    /**
+     * The index of the current user (used for database queries).
+     */
     public int current_user = 0;
+
+    /**
+     * The current {@link UserInfo} object.
+     */
     public UserInfo user;
+
+    /**
+     * Reference to the main UI controller.
+     */
     public UI ui;
+
+    /**
+     * The {@link WebFilter} instance for blocking/unblocking sites.
+     */
     public WebFilter webFilter = new WebFilter();
+
+    /**
+     * Constructs a new {@code Program} instance and starts the periodic monitoring timer.
+     */
     public Program() {
         Timer timer = new Timer(true);
         timer.scheduleAtFixedRate(new TimerTask() {
@@ -34,7 +85,7 @@ public class Program {
                     for (EventInfo event : db.getEvents(current_user)) {
                         runEvent(event);
                     }
-                    for(var i : db.getProcesses(current_user))
+                    for (var i : db.getProcesses(current_user))
                         if (isProcessRunning(i.getProcess_name())) {
                             db.updateTime(i.getId());
                             int time_limit = db.getTimeLimit(i.getId());
@@ -52,6 +103,13 @@ public class Program {
         }, 0, 3000);
     }
 
+    /**
+     * Executes the specified {@link EventInfo} if its scheduled time has arrived.
+     * Handles shutdown, logout, and screenshot events.
+     * Removes non-repeating events after execution.
+     *
+     * @param event The event to run.
+     */
     public static void runEvent(EventInfo event) {
         long currentTimeMinutes = System.currentTimeMillis() / 60000;
 
@@ -72,12 +130,15 @@ public class Program {
                     takeScreenshot();
                     break;
             }
-            if(!event.isRepeat()) {
+            if (!event.isRepeat()) {
                 db.removeEvent(event);
             }
         }
     }
 
+    /**
+     * Shuts down the computer immediately.
+     */
     private static void shutdownComputer() {
         try {
             Runtime.getRuntime().exec("shutdown -s -t 0");
@@ -86,6 +147,9 @@ public class Program {
         }
     }
 
+    /**
+     * Logs out the current user.
+     */
     private static void logoutUser() {
         try {
             Runtime.getRuntime().exec("shutdown -l");
@@ -94,6 +158,9 @@ public class Program {
         }
     }
 
+    /**
+     * Takes a screenshot of the entire screen and saves it to the /Screenshots directory.
+     */
     private static void takeScreenshot() {
         try {
             Robot r = new Robot();
@@ -106,6 +173,13 @@ public class Program {
             e.printStackTrace();
         }
     }
+
+    /**
+     * Returns a list of running processes whose names match or contain the given name.
+     *
+     * @param pname The process name to search for.
+     * @return A list of matching process names.
+     */
     public static ArrayList<String> getRunningProcessesByName(String pname) {
         ArrayList<String> processes = new ArrayList<>();
         try {
@@ -126,6 +200,13 @@ public class Program {
         }
         return processes;
     }
+
+    /**
+     * Checks if a process with the given name is currently running.
+     *
+     * @param pname The process name to check.
+     * @return {@code true} if the process is running, {@code false} otherwise.
+     */
     public static boolean isProcessRunning(String pname) {
         try {
             Process process = Runtime.getRuntime().exec("tasklist");
@@ -146,11 +227,16 @@ public class Program {
         return false;
     }
 
+    /**
+     * Terminates all running processes that match the given name.
+     *
+     * @param pname The process name to terminate.
+     */
     public static void terminateProcess(String pname) {
         try {
             ArrayList<String> processes = getRunningProcessesByName(pname);
 
-            for(String process : processes) {
+            for (String process : processes) {
                 Process prs = Runtime.getRuntime().exec("taskkill /F /IM " + process);
                 prs.waitFor();
             }
@@ -165,5 +251,4 @@ public class Program {
             throw new RuntimeException(e);
         }
     }
-
 }

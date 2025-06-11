@@ -1,4 +1,5 @@
 package db;
+
 import Events.EventInfo;
 import Processes.ProcessInfo;
 import Processes.UserInfo;
@@ -15,12 +16,35 @@ import java.util.Arrays;
 import java.util.Base64;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
-/**
- * The {@code Database} class manages database operations such as adding, updating,
- * and removing processes, as well as handling time tracking. It uses a singleton
- * pattern to ensure there is only one instance of the database connection.
- */
 
+/**
+ * The {@code Database} class provides a singleton interface for managing all database operations
+ * in the Parental Control App. It supports asynchronous execution of database tasks using a
+ * background thread and a blocking queue, ensuring that database access is thread-safe and
+ * non-blocking for the main application.
+ * <p>
+ * This class handles CRUD operations for users, processes, time limits, and events, as well as
+ * secure password management for admin access. It uses SQLite as the underlying database.
+ * </p>
+ * <h2>Features:</h2>
+ * <ul>
+ *   <li>Singleton pattern for a single database connection</li>
+ *   <li>Asynchronous task execution via a dedicated thread</li>
+ *   <li>Process and user management</li>
+ *   <li>Time tracking and time limit enforcement</li>
+ *   <li>Event scheduling and management</li>
+ *   <li>Secure password hashing and verification</li>
+ * </ul>
+ *
+ * <h2>Thread Safety:</h2>
+ * <p>
+ * All write operations are executed asynchronously on a background thread. Some read operations
+ * are synchronized to ensure thread safety.
+ * </p>
+ *
+ * @author Claudiu Padure
+ * @version 1.0
+ */
 public class Database {
     /**
      * Database connection object.
@@ -47,9 +71,9 @@ public class Database {
      */
     private final Thread dbThread;
 
-
     /**
      * Constructor to initialize the database connection and background task thread.
+     * Creates all required tables if they do not exist.
      */
     public Database() {
         try {
@@ -94,7 +118,6 @@ public class Database {
         }
         System.out.println("Successfully connected to database");
 
-
         dbThread = new Thread(() -> {
             while (true) {
                 try {
@@ -121,7 +144,6 @@ public class Database {
         return instance;
     }
 
-
     /**
      * Adds a task to the database task queue for asynchronous execution.
      *
@@ -132,9 +154,10 @@ public class Database {
     }
 
     /**
-     * Adds a new process to the database for a specific user.
+     * Adds a new process for a specific user if it does not already exist.
+     * Also sets the time limit for the process asynchronously.
      *
-     * @param prs    The Object of the process.
+     * @param prs The {@link ProcessInfo} object containing process details.
      */
     public void addProcess(ProcessInfo prs) {
         executeDatabaseTask(() -> {
@@ -147,7 +170,6 @@ public class Database {
                         return;
                     }
                 }
-
                 try (PreparedStatement insertStmt = con.prepareStatement(
                         "INSERT INTO Processes (USER_ID, PROCESS_NAME, TOTAL_TIME) VALUES (?, ?, 0)")) {
                     insertStmt.setInt(1, prs.getUser_id());
@@ -162,10 +184,9 @@ public class Database {
 
         executeDatabaseTask(() -> {
             try (PreparedStatement idStmt = con.prepareStatement(
-                    "Select ID from Processes WHERE USER_ID = ? AND PROCESS_NAME = ?")){
-                idStmt.setInt(1,prs.getUser_id());
-                idStmt.setString(2,prs.getProcess_name());
-
+                    "Select ID from Processes WHERE USER_ID = ? AND PROCESS_NAME = ?")) {
+                idStmt.setInt(1, prs.getUser_id());
+                idStmt.setString(2, prs.getProcess_name());
                 try (ResultSet rs = idStmt.executeQuery()) {
                     if (rs.next()) {
                         prs.setId(rs.getInt("ID"));
@@ -174,17 +195,15 @@ public class Database {
                         System.out.println("Process ID not found");
                     }
                 }
-
             } catch (SQLException e) {
                 throw new RuntimeException(e);
             }
-
-            });
+        });
     }
 
-
     /**
-     * Updates the last recorded time of a process.
+     * Increments the total tracked time for a process by 2 seconds.
+     * This operation is performed asynchronously.
      *
      * @param process_id The ID of the process to update.
      */
@@ -200,12 +219,12 @@ public class Database {
         });
     }
 
-
     /**
-     * Sets a time limit for a given process.
+     * Sets or updates the time limit for a given process.
+     * If a time limit already exists, it is updated; otherwise, a new record is inserted.
+     * This operation is performed asynchronously.
      *
-     * @param process_id The ID of the process.
-     * @param time_limit The time limit to assign (in seconds).
+     * @param prs The {@link ProcessInfo} object containing process ID and time limit.
      */
     public void setTimeLimit(ProcessInfo prs) {
         executeDatabaseTask(() -> {
@@ -223,7 +242,6 @@ public class Database {
                         }
                     }
                 }
-
                 try (PreparedStatement insertStmt = con.prepareStatement(
                         "INSERT INTO Timelimits (PROCESS_ID, TIME_LIMIT) VALUES (?, ? )")) {
                     insertStmt.setInt(1, prs.getId());
@@ -239,25 +257,31 @@ public class Database {
 
     /**
      * Retrieves the time limit for a specific process.
+     * This method is thread-safe.
      *
-     * @param process_id The ID of the process to query.
-     * @return The time limit assigned to the process (in seconds).
+     * @param process_id The ID of the process.
+     * @return The time limit in seconds, or 0 if not set.
      */
     public synchronized int getTimeLimit(int process_id) {
         try {
             PreparedStatement checkQuery = con.prepareStatement("Select * from Timelimits  WHERE PROCESS_ID= ?");
             checkQuery.setInt(1, process_id);
             ResultSet rs = checkQuery.executeQuery();
-            if(rs.next()) {
+            if (rs.next()) {
                 return rs.getInt("TIME_LIMIT");
             }
-
         } catch (SQLException e) {
             throw new RuntimeException(e);
         }
-
         return 0;
     }
+
+    /**
+     * Retrieves all processes for a given user that appear to be URLs (by extension).
+     *
+     * @param user The {@link UserInfo} object representing the user.
+     * @return A list of {@link ProcessInfo} objects representing URL-like processes.
+     */
     public synchronized ArrayList<ProcessInfo> getURLS(UserInfo user) {
         ArrayList<ProcessInfo> resArray = new ArrayList<>();
         try {
@@ -265,9 +289,8 @@ public class Database {
                     "SELECT * FROM Processes WHERE USER_ID = ? AND " +
                             "(process_name LIKE '%.com%' OR process_name LIKE '%.net%' OR process_name LIKE '%.org%' OR process_name LIKE '%.edu%')"
             );
-            checkQuery.setInt(1, user.getId()-1);
+            checkQuery.setInt(1, user.getId() - 1);
             ResultSet rs = checkQuery.executeQuery();
-
             while (rs.next()) {
                 int id = rs.getInt("ID");
                 int userId = rs.getInt("USER_ID");
@@ -276,42 +299,40 @@ public class Database {
                 int timeLimit = getTimeLimit(id);
                 resArray.add(new ProcessInfo(id, userId, processName, totalTime, timeLimit));
             }
-
             rs.close();
             checkQuery.close();
         } catch (SQLException e) {
             throw new RuntimeException(e);
         }
-
         return resArray;
     }
 
     /**
-     * Retrieves the currently tracked time for a specific process.
+     * Retrieves the total tracked time for a specific process.
+     * This method is thread-safe.
      *
-     * @param process_id The ID of the process to query.
-     * @return The current time tracked for the process (in seconds).
+     * @param process_id The ID of the process.
+     * @return The total time in seconds.
      */
     public synchronized int getTime(int process_id) {
         try {
             PreparedStatement checkQuery = con.prepareStatement("Select * from Processes WHERE ID= ?");
             checkQuery.setInt(1, process_id);
             ResultSet rs = checkQuery.executeQuery();
-            if(rs.next()) {
+            if (rs.next()) {
                 return rs.getInt("TOTAL_TIME");
             }
-
         } catch (SQLException e) {
             throw new RuntimeException(e);
         }
-
         return 0;
     }
 
     /**
-     * Removes a process from the database.
+     * Removes a process and its associated time limits from the database.
+     * This operation is performed asynchronously.
      *
-     * @param process_id The ID of the process to remove.
+     * @param prs The {@link ProcessInfo} object representing the process to remove.
      */
     public synchronized void removeProcess(ProcessInfo prs) {
         executeDatabaseTask(() -> {
@@ -323,7 +344,6 @@ public class Database {
                 PreparedStatement checkQuery2 = con.prepareStatement("DELETE FROM TimeLimits WHERE PROCESS_ID=?");
                 checkQuery2.setInt(1, prs.getId());
                 checkQuery2.executeUpdate();
-
             } catch (SQLException e) {
                 throw new RuntimeException(e);
             }
@@ -331,10 +351,11 @@ public class Database {
     }
 
     /**
-     * Retrieves a list of process names for a specific user.
+     * Retrieves all processes for a specific user.
+     * This method is thread-safe.
      *
-     * @param user_id The ID of the user to query.
-     * @return An {@code ArrayList} of process names for the user.
+     * @param user_id The ID of the user.
+     * @return A list of {@link ProcessInfo} objects.
      */
     public synchronized ArrayList<ProcessInfo> getProcesses(int user_id) {
         ArrayList<ProcessInfo> resArray = new ArrayList<>();
@@ -342,35 +363,44 @@ public class Database {
             PreparedStatement checkQuery = con.prepareStatement("SELECT * FROM processes WHERE user_id=?");
             checkQuery.setInt(1, user_id);
             ResultSet rs = checkQuery.executeQuery();
-
-            while  (rs.next()) {
+            while (rs.next()) {
                 int time_limit = getTimeLimit(rs.getInt("ID"));
-                resArray.add(new ProcessInfo(rs.getInt("ID"), rs.getInt("USER_ID"), rs.getString("PROCESS_NAME"),rs.getInt("TOTAL_TIME"), time_limit));
+                resArray.add(new ProcessInfo(rs.getInt("ID"), rs.getInt("USER_ID"), rs.getString("PROCESS_NAME"), rs.getInt("TOTAL_TIME"), time_limit));
             }
-
         } catch (SQLException e) {
             throw new RuntimeException(e);
         }
         return resArray;
     }
 
+    /**
+     * Retrieves all users from the database.
+     *
+     * @return A list of {@link UserInfo} objects.
+     */
     public ArrayList<UserInfo> getUsers() {
         ArrayList<UserInfo> resArray = new ArrayList<>();
         try {
             PreparedStatement checkQuery = con.prepareStatement("SELECT * FROM users");
             ResultSet rs = checkQuery.executeQuery();
-
-            while  (rs.next()) {
-                resArray.add(new UserInfo(rs.getString("name"),rs.getInt("id")));
+            while (rs.next()) {
+                resArray.add(new UserInfo(rs.getString("name"), rs.getInt("id")));
             }
         } catch (SQLException e) {
             throw new RuntimeException(e);
         }
         return resArray;
     }
+
+    /**
+     * Checks if a user with the given name exists in the database.
+     *
+     * @param name The username to check.
+     * @return {@code true} if the user exists, {@code false} otherwise.
+     */
     public boolean isUserName(String name) {
         try (PreparedStatement stm = con.prepareStatement("SELECT * FROM users WHERE name=?")) {
-            stm.setString(1,name);
+            stm.setString(1, name);
             ResultSet rs = stm.executeQuery();
             if (rs.next()) {
                 return true;
@@ -380,15 +410,22 @@ public class Database {
         }
         return false;
     }
-    public synchronized boolean createUser(String name)     {
-        if(!isUserName(name)) {
+
+    /**
+     * Creates a new user with the specified name if it does not already exist.
+     * This operation is performed asynchronously.
+     *
+     * @param name The name of the new user.
+     * @return {@code true} if the user was created, {@code false} if the user already exists.
+     */
+    public synchronized boolean createUser(String name) {
+        if (!isUserName(name)) {
             executeDatabaseTask(() -> {
                 try (PreparedStatement stmt = con.prepareStatement("INSERT INTO Users (NAME,IP) VALUES (?,?)")) {
                     stmt.setString(1, name);
-                    stmt.setString(2,"192.168.1.1");
+                    stmt.setString(2, "192.168.1.1");
                     stmt.executeUpdate();
                     System.out.println("User created: " + name);
-
                 } catch (SQLException e) {
                     System.err.println("Error setting time limit: " + e.getMessage());
                 }
@@ -398,12 +435,16 @@ public class Database {
         return false;
     }
 
-
+    /**
+     * Deletes a user and all associated processes, time limits, and events.
+     * This operation is performed asynchronously.
+     *
+     * @param user The {@link UserInfo} object representing the user to delete.
+     */
     public synchronized void deleteUser(UserInfo user) {
         executeDatabaseTask(() -> {
             try {
-                int userId = user.getId()-1;
-
+                int userId = user.getId() - 1;
                 ArrayList<Integer> processIds = new ArrayList<>();
                 try (PreparedStatement getProcesses = con.prepareStatement(
                         "SELECT ID FROM Processes WHERE User_ID = ?")) {
@@ -413,7 +454,6 @@ public class Database {
                         processIds.add(rs.getInt("ID"));
                     }
                 }
-
                 try (PreparedStatement deleteTimeLimits = con.prepareStatement(
                         "DELETE FROM TimeLimits WHERE Process_ID = ?")) {
                     for (int processId : processIds) {
@@ -421,34 +461,37 @@ public class Database {
                         deleteTimeLimits.executeUpdate();
                     }
                 }
-
                 try (PreparedStatement deleteEvents = con.prepareStatement(
                         "DELETE FROM Events WHERE User_ID = ?")) {
                     deleteEvents.setInt(1, userId);
                     deleteEvents.executeUpdate();
                 }
-
                 try (PreparedStatement deleteProcesses = con.prepareStatement(
                         "DELETE FROM Processes WHERE User_ID = ?")) {
                     deleteProcesses.setInt(1, userId);
                     deleteProcesses.executeUpdate();
                 }
-
                 try (PreparedStatement deleteUser = con.prepareStatement(
                         "DELETE FROM Users WHERE ID = ?")) {
-                    deleteUser.setInt(1, userId+1);
+                    deleteUser.setInt(1, userId + 1);
                     deleteUser.executeUpdate();
                 }
-
             } catch (SQLException e) {
                 throw new RuntimeException(e);
             }
         });
     }
+
+    /**
+     * Updates the name and time limit of a process.
+     * This operation is performed asynchronously.
+     *
+     * @param prs The {@link ProcessInfo} object containing updated process data.
+     */
     public void updateProcess(ProcessInfo prs) {
         executeDatabaseTask(() -> {
             try (PreparedStatement stmt = con.prepareStatement("UPDATE Processes SET PROCESS_NAME = ? WHERE ID = ?")) {
-                stmt.setString(1,prs.getProcess_name());
+                stmt.setString(1, prs.getProcess_name());
                 stmt.setInt(2, prs.getId());
                 stmt.executeUpdate();
             } catch (SQLException e) {
@@ -457,7 +500,7 @@ public class Database {
         });
         executeDatabaseTask(() -> {
             try (PreparedStatement stmt = con.prepareStatement("UPDATE TimeLimits SET TIME_LIMIT = ? WHERE PROCESS_ID = ?")) {
-                stmt.setInt(1,prs.getTime_limit());
+                stmt.setInt(1, prs.getTime_limit());
                 stmt.setInt(2, prs.getId());
                 stmt.executeUpdate();
             } catch (SQLException e) {
@@ -466,8 +509,12 @@ public class Database {
         });
     }
 
-
-
+    /**
+     * Adds a new event for a user if it does not already exist.
+     * This operation is performed asynchronously.
+     *
+     * @param evt The {@link EventInfo} object containing event details.
+     */
     public void addEvent(EventInfo evt) {
         executeDatabaseTask(() -> {
             try (PreparedStatement stmt = con.prepareStatement("SELECT 1 FROM Events WHERE EVENT_NAME = ? AND USER_ID = ?")) {
@@ -479,16 +526,15 @@ public class Database {
                         return;
                     }
                 }
-
                 try (PreparedStatement insertStmt = con.prepareStatement(
                         "INSERT INTO Events (USER_ID, EVENT_NAME,TIME, BEFORE_AT, REPEAT) VALUES (?, ?, ?,?,?)")) {
                     insertStmt.setInt(1, evt.getUser_id());
                     insertStmt.setString(2, evt.getEvent_name());
                     insertStmt.setInt(3, evt.getTime());
                     insertStmt.setInt(4, evt.isBefore_at() ? 1 : 0);
-                    insertStmt.setInt(5,evt.isRepeat() ? 1 : 0);
+                    insertStmt.setInt(5, evt.isRepeat() ? 1 : 0);
                     insertStmt.executeUpdate();
-                    System.out.println("Event added: " + evt.getEvent_name ());
+                    System.out.println("Event added: " + evt.getEvent_name());
                 }
             } catch (SQLException e) {
                 System.err.println("Error adding Event: " + e.getMessage());
@@ -496,7 +542,12 @@ public class Database {
         });
     }
 
-
+    /**
+     * Removes an event from the database.
+     * This operation is performed asynchronously.
+     *
+     * @param evt The {@link EventInfo} object representing the event to remove.
+     */
     public synchronized void removeEvent(EventInfo evt) {
         executeDatabaseTask(() -> {
             try {
@@ -511,16 +562,16 @@ public class Database {
 
     /**
      * Retrieves all events for a specific user.
+     * This method is thread-safe.
      *
      * @param userId The ID of the user.
-     * @return A list of {@code EventInfo} objects for the user.
+     * @return A list of {@link EventInfo} objects for the user.
      */
     public synchronized ArrayList<EventInfo> getEvents(int userId) {
         ArrayList<EventInfo> events = new ArrayList<>();
         try (PreparedStatement stmt = con.prepareStatement("SELECT * FROM Events WHERE USER_ID = ?")) {
             stmt.setInt(1, userId);
             ResultSet rs = stmt.executeQuery();
-
             while (rs.next()) {
                 EventInfo evt = new EventInfo(
                         rs.getInt("ID"),
@@ -540,8 +591,9 @@ public class Database {
 
     /**
      * Updates an existing event in the database.
+     * This operation is performed asynchronously.
      *
-     * @param evt The {@code EventInfo} object containing updated event data.
+     * @param evt The {@link EventInfo} object containing updated event data.
      */
     public void updateEvent(EventInfo evt) {
         executeDatabaseTask(() -> {
@@ -560,6 +612,12 @@ public class Database {
         });
     }
 
+    /**
+     * Checks the admin password against the stored hash, or sets it if not present.
+     *
+     * @param pass The password to check or set.
+     * @return {@code true} if the password is correct or was set, {@code false} otherwise.
+     */
     public boolean checkPassword(String pass) {
         try (PreparedStatement stmt = con.prepareStatement("SELECT * FROM ADMIN")) {
             ResultSet rs = stmt.executeQuery();
@@ -582,6 +640,12 @@ public class Database {
         }
     }
 
+    /**
+     * Hashes a password using PBKDF2 with a random salt.
+     *
+     * @param pass The password to hash.
+     * @return A {@link HashedPassword} object containing the salt and hash.
+     */
     public HashedPassword hashPassword(String pass) {
         try {
             SecureRandom random = new SecureRandom();
@@ -598,6 +662,12 @@ public class Database {
         }
     }
 
+    /**
+     * Adds a new admin password to the database, securely hashed.
+     * This operation is performed asynchronously.
+     *
+     * @param pass The password to add.
+     */
     public synchronized void addPassword(String pass) {
         executeDatabaseTask(() -> {
             try (PreparedStatement stmt = con.prepareStatement("INSERT INTO ADMIN(PASSWORD) VALUES(?)")) {
@@ -610,9 +680,4 @@ public class Database {
             }
         });
     }
-
-
-
-
-
 }

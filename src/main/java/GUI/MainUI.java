@@ -23,6 +23,13 @@ import java.util.Objects;
  * The {@code MainUI} class serves as the main entry point for the ParentalControlApp.
  * It handles the initialization of the application's user interface, the connection
  * to the backend logic, and the overall lifecycle of the application.
+ * <p>
+ * This class manages the display of the PIN entry window, the main application window,
+ * and the system tray integration for minimizing the app.
+ * </p>
+ *
+ * @author Claudiu Padure
+ * @version 1.0
  */
 public class MainUI extends Application {
 
@@ -31,10 +38,22 @@ public class MainUI extends Application {
      * the UI components and the backend logic.
      */
     private UI controller;
+
+    /**
+     * Reference to the main {@link Program} logic.
+     */
     private Program program;
+
+    /**
+     * The stage used for the PIN entry window.
+     */
     private Stage pinStage;
 
+    /**
+     * The application's tray icon for system tray integration.
+     */
     public TrayIcon trayIcon;
+
     /**
      * Starts the JavaFX application by loading the primary FXML file, initializing
      * the {@code UI} controller, and setting up the main application window.
@@ -47,13 +66,22 @@ public class MainUI extends Application {
         this.program = new Program();
         System.setProperty("java.awt.headless", "false");
         displayPIN(stage);
-
     }
 
+    /**
+     * Returns the main {@link Program} instance.
+     *
+     * @return The {@link Program} instance.
+     */
     public Program getProgram() {
         return program;
     }
 
+    /**
+     * Displays the PIN entry window for authentication.
+     *
+     * @param stage The stage to use for the PIN window.
+     */
     public void displayPIN(Stage stage) {
         try {
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/pinMenu.fxml"));
@@ -76,6 +104,11 @@ public class MainUI extends Application {
         }
     }
 
+    /**
+     * Displays the main application window after successful authentication.
+     *
+     * @throws IOException if an error occurs during loading the main FXML.
+     */
     public void displayMainWindow() throws IOException {
         FXMLLoader loader = new FXMLLoader(getClass().getResource("/main.fxml"));
         Parent root = loader.load();
@@ -83,7 +116,6 @@ public class MainUI extends Application {
         controller = loader.getController();
         Stage stage = new Stage();
         stage.initStyle(StageStyle.TRANSPARENT);
-        //stage.initStyle(StageStyle.UNDECORATED);
         Scene scene = new Scene(root);
         scene.setFill(Color.TRANSPARENT);
         scene.getStylesheets().add(getClass().getResource("/style.css").toExternalForm());
@@ -95,14 +127,12 @@ public class MainUI extends Application {
         addAppToTray(stage);
 
         new Thread(() -> {
-
             Platform.runLater(() -> {
                 controller.onProgramReady(program);
-                for(ProcessInfo p : controller.program.db.getURLS(controller.program.user)) {
+                for (ProcessInfo p : controller.program.db.getURLS(controller.program.user)) {
                     controller.program.webFilter.blockSite(p.getProcess_name());
                 }
             });
-
         }).start();
 
         Runtime.getRuntime().addShutdownHook(new Thread(() -> {
@@ -110,6 +140,7 @@ public class MainUI extends Application {
             controller.program.webFilter.unblockSites(controller.program.db.getURLS(controller.program.user));
         }));
     }
+
     /**
      * The main method serves as the entry point for the application.
      * It delegates execution to the JavaFX platform's {@code launch()} method.
@@ -123,6 +154,7 @@ public class MainUI extends Application {
     /**
      * Invoked when the application is stopping. This method is used to perform
      * cleanup actions.
+     *
      * @throws Exception if an error occurs during the shutdown process.
      */
     @Override
@@ -131,6 +163,11 @@ public class MainUI extends Application {
         System.exit(0);
     }
 
+    /**
+     * Adds the application to the system tray and sets up the tray icon menu.
+     *
+     * @param stage The main application stage.
+     */
     private void addAppToTray(Stage stage) {
         if (!SystemTray.isSupported()) {
             System.out.println("System tray not supported!");
@@ -184,6 +221,9 @@ public class MainUI extends Application {
         }
     }
 
+    /**
+     * Hides the PIN window and displays the main application window.
+     */
     public void hidePINWindowAndShowMain() {
         if (pinStage != null) {
             pinStage.hide();
@@ -198,6 +238,9 @@ public class MainUI extends Application {
         });
     }
 
+    /**
+     * Handles PIN verification and transitions to the main application window.
+     */
     @FXML
     public void verifyPassword() {
         System.out.println("Verifying PIN");

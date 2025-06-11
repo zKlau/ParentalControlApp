@@ -1,6 +1,5 @@
 package GUI;
 
-
 import Events.EventInfo;
 import Processes.ProcessInfo;
 import Processes.Program;
@@ -14,43 +13,100 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
 
-public class eventEditController{
-    public void print() {
-        System.out.println("Editing Controller");
-    }
+/**
+ * The {@code eventEditController} class manages the editing and creation of events
+ * in the application's user interface. It provides logic for populating event types,
+ * handling user input, and updating or removing events in the database.
+ * <p>
+ * This controller is intended for use with a JavaFX FXML view for event editing.
+ * </p>
+ *
+ * @author Claudiu Padure
+ * @version 1.0
+ */
+public class eventEditController {
 
+    /**
+     * Reference to the main program logic.
+     */
     private Program program;
+
+    /**
+     * Sets the program reference.
+     *
+     * @param program The {@link Program} instance to set.
+     */
     public void setProgram(Program program) {
         this.program = program;
     }
+
+    /**
+     * The currently selected event type.
+     */
     private String current_type;
+
+    /**
+     * The event type selected by the user.
+     */
     private String event_type;
 
+    /**
+     * Text field for entering the hour component of the event time.
+     */
     @FXML
     private TextField hour;
+
+    /**
+     * Text field for entering the minute component of the event time.
+     */
     @FXML
     private TextField minute;
 
+    /**
+     * The {@link EventInfo} object being edited or created.
+     */
     public EventInfo evt;
 
+    /**
+     * Returns the current {@link EventInfo} object.
+     *
+     * @return The event being edited or created.
+     */
     public EventInfo getEvent() {
         return evt;
     }
 
-
+    /**
+     * Menu for selecting the type of event.
+     */
     @FXML
     private MenuButton typeMenu;
+
+    /**
+     * Menu for selecting the event type.
+     */
     @FXML
     private MenuButton eventTypeMenu;
+
+    /**
+     * Group containing process-related UI elements.
+     */
     @FXML
     private Group ProcessGroup;
+
+    /**
+     * Group containing event-related UI elements.
+     */
     @FXML
     private Group EventGroup;
 
+    /**
+     * Populates the event type menu with available event types.
+     */
     public void populateLists() {
-        ArrayList<String> events = new ArrayList<>(Arrays.asList("Computer Shutdown","User System logout", "Screenshot"));
+        ArrayList<String> events = new ArrayList<>(Arrays.asList("Computer Shutdown", "User System logout", "Screenshot"));
         event_type = events.getFirst();
-        for(String type : events) {
+        for (String type : events) {
             MenuItem item = new MenuItem(type);
             item.setOnAction(e -> {
                 event_type = type;
@@ -60,14 +116,36 @@ public class eventEditController{
         }
         event_type_text.setText(events.getFirst());
     }
+
+    /**
+     * Checkbox for selecting if the event should run at a specific time.
+     */
     @FXML
     private CheckBox runningAtCheckbox;
+
+    /**
+     * Checkbox for selecting if the event should run after a specific time.
+     */
     @FXML
     private CheckBox runningAfterCheckbox;
+
+    /**
+     * Checkbox for selecting if the event should repeat.
+     */
     @FXML
     private CheckBox RepeatCheckbox;
+
+    /**
+     * Label displaying the selected event type.
+     */
     @FXML
     private Label event_type_text;
+
+    /**
+     * Sets the event to be edited and populates the UI fields accordingly.
+     *
+     * @param evt The {@link EventInfo} to edit.
+     */
     public void setEvent(EventInfo evt) {
         populateLists();
         if (evt.getId() == -1) {
@@ -76,8 +154,8 @@ public class eventEditController{
             return;
         }
         this.evt = evt;
-        hour.setText(Integer.toString(evt.getTime()/60));
-        minute.setText(Integer.toString(evt.getTime()%60));
+        hour.setText(Integer.toString(evt.getTime() / 60));
+        minute.setText(Integer.toString(evt.getTime() % 60));
         RepeatCheckbox.setSelected(evt.isRepeat());
         runningAtCheckbox.setText("Event running at " + evt.getTime() / 60 + ":" + evt.getTime() % 60 + "");
         runningAfterCheckbox.setText("Event running after " + evt.getTime() / 60 + "h and " + evt.getTime() % 60 + "m?");
@@ -86,6 +164,13 @@ public class eventEditController{
         event_type_text.setText(evt.getEvent_name());
         System.out.println("Merge");
     }
+
+    /**
+     * Saves the event based on the current UI input.
+     * If creating a new event, adds it to the database.
+     * If editing, updates the existing event in the database.
+     * Closes the window after saving.
+     */
     @FXML
     public void saveEvent() {
         if (evt == null && !hour.getText().isBlank()) {
@@ -105,33 +190,47 @@ public class eventEditController{
             evt.setTime(time);
             evt.setBefore_at(before_at);
             evt.setEvent_name(event_type);
-            //EventInfo newEvent = new EventInfo(, program.current_user, event_type, time,before_at, isRepeating);
             program.db.updateEvent(evt);
         }
         Stage stage = (Stage) runningAfterCheckbox.getScene().getWindow();
         stage.close();
     }
 
-
+    /**
+     * Handles selection of the "running after" option, ensuring mutual exclusivity.
+     */
     @FXML
     public void selectRunningAfter() {
         runningAtCheckbox.setSelected(false);
         System.out.println("running after");
     }
+
+    /**
+     * Handles selection of the "running at" option, ensuring mutual exclusivity.
+     */
     @FXML
     public void selectRunningAt() {
         runningAfterCheckbox.setSelected(false);
         System.out.println("running at");
     }
 
+    /**
+     * Tracks whether the event is set to repeat.
+     */
     private boolean isRepeating = false;
+
+    /**
+     * Toggles the repeat status of the event.
+     */
     @FXML
     public void selectRepeat() {
         isRepeating = !isRepeating;
         System.out.println("repeat");
     }
 
-
+    /**
+     * Removes the current event from the database and closes the window.
+     */
     @FXML
     public void removeEvent() {
         program.db.removeEvent(evt);
@@ -139,4 +238,10 @@ public class eventEditController{
         stage.close();
     }
 
+    /**
+     * Prints a debug message indicating the controller is active.
+     */
+    public void print() {
+        System.out.println("Editing Controller");
+    }
 }
