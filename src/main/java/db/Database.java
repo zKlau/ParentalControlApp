@@ -105,6 +105,7 @@ public class Database {
                     TIME INTEGER NOT NULL,
                     BEFORE_AT INTEGER NOT NULL,
                     REPEAT INTEGER NOT NULL,
+                    CREATED_AT INTEGER NOT NULL,
                     FOREIGN KEY (USER_ID) REFERENCES Users(ID)
                 );
                 CREATE TABLE IF NOT EXISTS Admin (
@@ -527,12 +528,13 @@ public class Database {
                     }
                 }
                 try (PreparedStatement insertStmt = con.prepareStatement(
-                        "INSERT INTO Events (USER_ID, EVENT_NAME,TIME, BEFORE_AT, REPEAT) VALUES (?, ?, ?,?,?)")) {
+                        "INSERT INTO Events (USER_ID, EVENT_NAME,TIME, BEFORE_AT, REPEAT,CREATED_AT) VALUES (?, ?, ?,?,?,?)")) {
                     insertStmt.setInt(1, evt.getUser_id());
                     insertStmt.setString(2, evt.getEvent_name());
                     insertStmt.setInt(3, evt.getTime());
                     insertStmt.setInt(4, evt.isBefore_at() ? 1 : 0);
                     insertStmt.setInt(5, evt.isRepeat() ? 1 : 0);
+                    insertStmt.setLong(6, evt.getCreated_at());
                     insertStmt.executeUpdate();
                     System.out.println("Event added: " + evt.getEvent_name());
                 }
@@ -579,7 +581,8 @@ public class Database {
                         rs.getString("EVENT_NAME"),
                         rs.getInt("TIME"),
                         rs.getInt("BEFORE_AT") == 1,
-                        rs.getInt("REPEAT") == 1
+                        rs.getInt("REPEAT") == 1,
+                        rs.getLong("CREATED_AT")
                 );
                 events.add(evt);
             }
@@ -587,6 +590,19 @@ public class Database {
             throw new RuntimeException("Error retrieving events: " + e.getMessage(), e);
         }
         return events;
+    }
+
+    public void setEventTime(EventInfo evt, long created_at) {
+        executeDatabaseTask(() -> {
+            try (PreparedStatement stmt = con.prepareStatement("UPDATE Events SET CREATED_AT = ? WHERE ID = ?")) {
+                stmt.setInt(1, (int)created_at);
+                stmt.setInt(2, evt.getId());
+                stmt.executeUpdate();
+                System.out.println("Event creation time updated: " + evt.getEvent_name());
+            } catch (SQLException e) {
+                System.err.println("Error updating Event: " + e.getMessage());
+            }
+        });
     }
 
     /**

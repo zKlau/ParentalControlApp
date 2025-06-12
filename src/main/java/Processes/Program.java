@@ -13,6 +13,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.Timer;
 import java.util.TimerTask;
 
@@ -83,6 +84,7 @@ public class Program {
             public void run() {
                 try {
                     for (EventInfo event : db.getEvents(current_user)) {
+                        System.out.println("Checking events");
                         runEvent(event);
                     }
                     for (var i : db.getProcesses(current_user))
@@ -111,11 +113,25 @@ public class Program {
      * @param event The event to run.
      */
     public static void runEvent(EventInfo event) {
-        long currentTimeMinutes = System.currentTimeMillis() / 60000;
+        Calendar calendar = Calendar.getInstance();
+        int currentTimeMinutes = calendar.get(Calendar.HOUR_OF_DAY) * 60 + calendar.get(Calendar.MINUTE);
+        int eventTime = event.getTime();
+        long createdAt = event.getCreated_at();
+        boolean shouldRun = false;
 
-        if (event.getTime() >= currentTimeMinutes) {
+        if (event.isBefore_at()) {
+            if (currentTimeMinutes == eventTime) {
+                shouldRun = true;
+            }
+        } else {
+            long minutesSinceCreation = (System.currentTimeMillis() / 60000L) - createdAt;
+            if (minutesSinceCreation >= eventTime) {
+                shouldRun = true;
+            }
+        }
+
+        if (shouldRun) {
             String name = event.getEvent_name();
-
             switch (name) {
                 case "Computer Shutdown":
                     System.out.println("Trigger: Computer Shutdown");
@@ -129,12 +145,21 @@ public class Program {
                     System.out.println("Trigger: Screenshot");
                     takeScreenshot();
                     break;
+                default:
+                    System.out.println("Unknown event: " + name);
+                    break;
             }
+
             if (!event.isRepeat()) {
                 db.removeEvent(event);
+            } else {
+                if (!event.isBefore_at()) {
+                    db.setEventTime(event, System.currentTimeMillis() / 60000L);
+                }
             }
         }
     }
+
 
     /**
      * Shuts down the computer immediately.
@@ -162,17 +187,23 @@ public class Program {
      * Takes a screenshot of the entire screen and saves it to the /Screenshots directory.
      */
     private static void takeScreenshot() {
-        try {
-            Robot r = new Robot();
-            String path = "/Screenshots/" + System.currentTimeMillis() + ".jpg";
-            Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
-            Rectangle capture = new Rectangle(screenSize.width, screenSize.height);
-            BufferedImage Image = r.createScreenCapture(capture);
-            ImageIO.write(Image, "jpg", new File(path));
-        } catch (AWTException | IOException e) {
-            e.printStackTrace();
+    try {
+        Robot r = new Robot();
+        String dirPath = "Screenshots";
+        File dir = new File(dirPath);
+        if (!dir.exists()) {
+            dir.mkdirs();
         }
+        String path = dirPath + File.separator + System.currentTimeMillis() + ".jpg";
+        Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
+        Rectangle capture = new Rectangle(screenSize.width, screenSize.height);
+        BufferedImage image = r.createScreenCapture(capture);
+        ImageIO.write(image, "jpg", new File(path));
+    } catch (AWTException | IOException e) {
+        e.printStackTrace();
     }
+}
+
 
     /**
      * Returns a list of running processes whose names match or contain the given name.

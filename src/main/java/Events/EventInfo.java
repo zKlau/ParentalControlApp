@@ -1,5 +1,7 @@
 package Events;
 
+import java.util.Calendar;
+
 /**
  * The {@code EventInfo} class represents an event associated with a user in the Parental Control App.
  * It encapsulates event details such as the event's ID, user ID, name, scheduled time, and recurrence options.
@@ -42,6 +44,10 @@ public class EventInfo {
     private boolean repeat;
 
     /**
+     * Represents the creation time of the event.
+     */
+    private long created_at;
+    /**
      * Default constructor initializing fields to default values.
      */
     public EventInfo() {
@@ -51,6 +57,7 @@ public class EventInfo {
         this.time = 0;
         this.repeat = false;
         this.before_at = false;
+        this.created_at = System.currentTimeMillis();
     }
 
     /**
@@ -68,6 +75,8 @@ public class EventInfo {
         this.event_name = event_name;
         this.time = time;
         this.repeat = repeat;
+        Calendar c = Calendar.getInstance();
+        this.created_at = c.get(Calendar.HOUR_OF_DAY) * 60 + c.get(Calendar.MINUTE);
     }
 
     /**
@@ -87,8 +96,28 @@ public class EventInfo {
         this.time = time;
         this.before_at = before_at;
         this.repeat = repeat;
+        this.created_at = System.currentTimeMillis();
     }
-
+    /**
+     * Constructs an {@code EventInfo} with all parameters.
+     *
+     * @param id         The event ID.
+     * @param user_id    The user ID.
+     * @param event_name The event name.
+     * @param time       The scheduled time.
+     * @param before_at  Whether the event triggers before a certain time.
+     * @param repeat     Whether the event repeats.
+     * @param created_at The event creation time
+     */
+    public EventInfo(int id, int user_id, String event_name, int time, boolean before_at, boolean repeat,long created_at) {
+        this.id = id;
+        this.user_id = user_id;
+        this.event_name = event_name;
+        this.time = time;
+        this.before_at = before_at;
+        this.repeat = repeat;
+        this.created_at = created_at;
+    }
     /**
      * Returns whether the event triggers before a certain time.
      *
@@ -105,6 +134,23 @@ public class EventInfo {
      */
     public void setBefore_at(boolean before_at) {
         this.before_at = before_at;
+    }
+
+    /**
+     * Returns the event creation time.
+     *
+     * @return The event creation time.
+     */
+    public long getCreated_at() {
+        return created_at;
+    }
+    /**
+     * Sets the event creation time .
+     *
+     * @param created_at The event creation time.
+     */
+    public void setCreated_at(long created_at) {
+        this.created_at = created_at;
     }
 
     /**
