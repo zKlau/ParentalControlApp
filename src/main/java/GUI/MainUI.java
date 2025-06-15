@@ -54,6 +54,13 @@ public class MainUI extends Application {
      */
     public TrayIcon trayIcon;
 
+
+@Override
+public void init() throws Exception {
+    // This runs before start() and before any GUI is shown
+    this.program = new Program();
+    // You can do other setup here
+}
     /**
      * Starts the JavaFX application by loading the primary FXML file, initializing
      * the {@code UI} controller, and setting up the main application window.
@@ -63,8 +70,23 @@ public class MainUI extends Application {
      */
     @Override
     public void start(Stage stage) throws Exception {
-        this.program = new Program();
+        //this.program = new Program();
         System.setProperty("java.awt.headless", "false");
+        //displayMainWindow();
+
+        new Thread(() -> {
+            Platform.runLater(() -> {
+                //controller.onProgramReady(program);
+                for (ProcessInfo p : program.db.getURLS(program.user)) {
+                    program.webFilter.blockSite(p.getProcess_name());
+                };
+            });
+        }).start();
+
+        Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+            System.out.println("Shutting down app...");
+            program.webFilter.unblockSites(program.db.getURLS(program.user));
+        }));
         displayPIN(stage);
     }
 
@@ -91,13 +113,19 @@ public class MainUI extends Application {
             Object controller = loader.getController();
             if (controller instanceof PasswordController passController) {
                 passController.setMainApp(this);
+                passController.setPrimaryStage(stage);
             }
 
+            stage.initStyle(StageStyle.TRANSPARENT);
             Scene scene = new Scene(root);
             scene.getStylesheets().add(getClass().getResource("/style.css").toExternalForm());
             stage.setTitle("ParentalControlApp");
             stage.setScene(scene);
+            Platform.setImplicitExit(false);
+            stage.setResizable(false);
+            addAppToTray(stage);
             stage.show();
+
 
         } catch (IOException e) {
             throw new RuntimeException(e);
@@ -124,8 +152,9 @@ public class MainUI extends Application {
         stage.show();
         Platform.setImplicitExit(false);
         ResizeHelper.addResizeListener(stage, (Region) root);
-        addAppToTray(stage);
 
+        controller.onProgramReady(program);
+/*
         new Thread(() -> {
             Platform.runLater(() -> {
                 controller.onProgramReady(program);
@@ -138,7 +167,7 @@ public class MainUI extends Application {
         Runtime.getRuntime().addShutdownHook(new Thread(() -> {
             System.out.println("Shutting down app...");
             controller.program.webFilter.unblockSites(controller.program.db.getURLS(controller.program.user));
-        }));
+        }));*/
     }
 
     /**
@@ -197,6 +226,9 @@ public class MainUI extends Application {
                 } else {
                     try {
                         Stage newStage = new Stage();
+                        //SystemTray.getSystemTray().remove(trayIcon);
+                        //Platform.exit();
+                        //System.exit(0);
                         displayPIN(newStage);
                     } catch (Exception ex) {
                         ex.printStackTrace();

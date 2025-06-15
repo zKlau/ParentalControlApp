@@ -9,13 +9,12 @@
 - [x] Stop process from running when reaching a time limit
 - [x] Stop webpage from running
 - [x] User interface
-- [ ] Automatically create a user with the current system username if none exists
-- [ ] Automatically switch active user to the current system user
 - [ ] Allow admin to connect remotely to the system
-- [ ] Track total time spend on each process on the system
-- [ ] Lock system between hour x and y
+- [x] Lock system after x hour
 - [ ] Lock system after n hours screen time
-- [ ] Show app in system tray
+- [x] Show app in system tray
+- [x] Run at startup without requiring admin password
+- [x] Admin password required to change settings or to close the app
 
 ## Setup
 

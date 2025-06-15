@@ -6,15 +6,22 @@
 <?import javafx.scene.layout.AnchorPane?>
 <?import javafx.scene.text.Font?>
 
-<AnchorPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="204.0" prefWidth="600.0" xmlns="http://javafx.com/javafx/23.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="GUI.PasswordController">
+<?import javafx.scene.layout.HBox?>
+<AnchorPane fx:id="root" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="224.0" prefWidth="620.0" stylesheets="@style.css" xmlns="http://javafx.com/javafx/23.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="GUI.PasswordController">
    <children>
-      <Label layoutX="104.0" layoutY="45.0" prefHeight="65.0" prefWidth="393.0" text="Please input the Password">
+      <Label layoutX="66.0" layoutY="37.0" prefHeight="65.0" prefWidth="506.0" text="Please input the Password">
          <font>
             <Font size="44.0" />
          </font>
       </Label>
-      <Button layoutX="268.0" layoutY="165.0" mnemonicParsing="false" onAction="#verifyPassword" text="ENTER" />
-      <Button layoutX="335.0" layoutY="165.0" mnemonicParsing="false" onAction="#closeAppVerifyPassword" text="CLOSE APP" />
-      <PasswordField fx:id="passwordField" layoutX="104.0" layoutY="130.0" prefHeight="25.0" prefWidth="393.0" />
+      <Button layoutX="185.0" layoutY="165.0" mnemonicParsing="false" onAction="#verifyPassword" styleClass="clickButton" text="ENTER" />
+      <Button layoutX="335.0" layoutY="165.0" mnemonicParsing="false" onAction="#closeAppVerifyPassword" styleClass="clickButton" text="CLOSE APP" />
+      <PasswordField id="inputStyle" fx:id="passwordField" layoutX="114.0" layoutY="102.0" prefHeight="25.0" prefWidth="393.0" />
+      <HBox fx:id="topBarPane" alignment="TOP_RIGHT" layoutX="75.0" onMouseDragged="#windowDragged" onMousePressed="#windowPressed" prefHeight="27.0" prefWidth="1011.0" AnchorPane.leftAnchor="75.0" AnchorPane.rightAnchor="1.0" AnchorPane.topAnchor="0.0">
+         <children>
+            <Button fx:id="minimizeButton" mnemonicParsing="false" onAction="#minimizeWindow" text="-" textAlignment="RIGHT" />
+            <Button fx:id="closeButton" mnemonicParsing="false" onAction="#closeWindow" text="X" textAlignment="RIGHT" />
+         </children>
+      </HBox>
    </children>
 </AnchorPane>

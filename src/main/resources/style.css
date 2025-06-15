@@ -13,7 +13,15 @@
     -fx-background-color: rgba(100, 100, 100, 0.5);
     -fx-control-inner-background: rgba(100, 100, 100, 0.5);
 }
-
+#inputStyle {
+    -fx-background-color: rgba(54, 36, 0, 0.582);
+    -fx-text-fill: white;
+    -fx-font-size: 1.2em;
+    -fx-padding: 10 10 10 10;
+    -fx-border-color: rgba(100, 100, 100, 0.5);
+    -fx-border-radius: 10;
+    -fx-border-width: 2px;
+}
 .listMenuTitle {
     -fx-font-size: 1.5em;
     -fx-font-weight: bold;

@@ -130,6 +130,18 @@ public class eventEditController {
     private CheckBox runningAfterCheckbox;
 
     /**
+     * Updates the checkbox time
+     */
+    @FXML
+    public void updateButtonText() {
+        System.out.println("updated");
+        int hours = hour.getText().isBlank() ? 0 : Integer.parseInt(hour.getText());
+        int minutes = minute.getText().isBlank() ? 0 : Integer.parseInt(minute.getText());
+        runningAtCheckbox.setText("Event running at " + hours + ":" + minutes+ "");
+        runningAfterCheckbox.setText("Event running after " + hours + "h and " + minutes + "m?");
+    }
+
+    /**
      * Checkbox for selecting if the event should repeat.
      */
     @FXML
@@ -161,8 +173,9 @@ public class eventEditController {
         runningAfterCheckbox.setText("Event running after " + evt.getTime() / 60 + "h and " + evt.getTime() % 60 + "m?");
         runningAtCheckbox.setSelected(evt.isBefore_at());
         runningAfterCheckbox.setSelected(!evt.isBefore_at());
-        event_type_text.setText(evt.getEvent_name());
-        System.out.println("Merge");
+        event_type = evt.getEvent_name();
+        event_type_text.setText(event_type);
+        eventTypeMenu.setText(event_type);
     }
 
     /**

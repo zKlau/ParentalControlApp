@@ -17,8 +17,8 @@
                 <MenuButton fx:id="eventTypeMenu" layoutY="-17.0" mnemonicParsing="false" text="Event Type" />
                 <Label layoutX="220.0" layoutY="4.0" text="Hour: " />
                 <Label layoutX="303.0" layoutY="4.0" text="Minute: " />
-                <TextField fx:id="hour" alignment="CENTER" layoutX="253.0" prefHeight="25.0" prefWidth="44.0" promptText="18" />
-                <TextField fx:id="minute" alignment="CENTER" layoutX="347.0" prefHeight="25.0" prefWidth="44.0" promptText="59" />
+                <TextField fx:id="hour" alignment="CENTER" layoutX="253.0" onKeyTyped="#updateButtonText" prefHeight="25.0" prefWidth="44.0" promptText="18" />
+                <TextField fx:id="minute" alignment="CENTER" layoutX="347.0" onKeyTyped="#updateButtonText" prefHeight="25.0" prefWidth="44.0" promptText="59" />
                 <CheckBox fx:id="runningAtCheckbox" layoutX="173.0" layoutY="35.0" mnemonicParsing="false" onAction="#selectRunningAt" text="Event running at 0:0?" />
                 <CheckBox fx:id="runningAfterCheckbox" layoutX="333.0" layoutY="35.0" mnemonicParsing="false" onAction="#selectRunningAfter" text="Event running after 0:0 hours?" />
                 <CheckBox fx:id="RepeatCheckbox" layoutX="409.0" layoutY="4.0" mnemonicParsing="false" onAction="#selectRepeat" text="Repeat" />

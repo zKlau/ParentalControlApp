@@ -2,7 +2,11 @@ package GUI;
 
 import javafx.application.Platform;
 import javafx.fxml.FXML;
+import javafx.geometry.Rectangle2D;
 import javafx.scene.control.PasswordField;
+import javafx.scene.layout.HBox;
+import javafx.stage.Screen;
+import javafx.stage.Stage;
 
 import java.awt.*;
 
@@ -31,6 +35,19 @@ public class PasswordController {
      */
     private MainUI mainApp;
 
+
+    private double xOffset = 0;
+    private double yOffset = 0;
+    private Stage primaryStage;
+
+
+    public void setPrimaryStage(Stage primaryStage) {
+        this.primaryStage = primaryStage;
+    }
+
+    @FXML
+    private HBox topBarPane;
+
     /**
      * Sets the main application reference.
      *
@@ -38,7 +55,9 @@ public class PasswordController {
      */
     public void setMainApp(MainUI mainApp) {
         this.mainApp = mainApp;
+
     }
+
 
     /**
      * Handles password verification for unlocking the main application window.
@@ -51,6 +70,74 @@ public class PasswordController {
             mainApp.hidePINWindowAndShowMain();
             passwordField.setText("");
         }
+    }
+    /**
+     * Handles mouse press event for window dragging.
+     */
+    @FXML
+    public void windowPressed(javafx.scene.input.MouseEvent event) {
+        xOffset = event.getSceneX();
+        yOffset = event.getSceneY();
+    }
+
+    /**
+     * Handles mouse drag event for window dragging.
+     */
+    @FXML
+    public void windowDragged(javafx.scene.input.MouseEvent event) {
+        Stage stage = (Stage) ((HBox) event.getSource()).getScene().getWindow();
+        if (!stage.isMaximized()) {
+            stage.setX(event.getScreenX() - xOffset);
+            stage.setY(event.getScreenY() - yOffset);
+        }
+    }
+
+    /**
+     * Minimizes the main application window.
+     */
+    @FXML
+    public void minimizeWindow() {
+        primaryStage.setIconified(true);
+    }
+
+    private boolean isMaximized = false;
+    private double prevX, prevY, prevWidth, prevHeight;
+
+    /**
+     * Maximizes or restores the main application window.
+     */
+    @FXML
+    public void maximizeWindow() {
+        if (!isMaximized) {
+            prevX = primaryStage.getX();
+            prevY = primaryStage.getY();
+            prevWidth = primaryStage.getWidth();
+            prevHeight = primaryStage.getHeight();
+
+            Rectangle2D bounds = Screen.getPrimary().getVisualBounds();
+
+            primaryStage.setX(bounds.getMinX());
+            primaryStage.setY(bounds.getMinY());
+            primaryStage.setWidth(bounds.getWidth());
+            primaryStage.setHeight(bounds.getHeight());
+
+            isMaximized = true;
+        } else {
+            primaryStage.setX(prevX);
+            primaryStage.setY(prevY);
+            primaryStage.setWidth(prevWidth);
+            primaryStage.setHeight(prevHeight);
+
+            isMaximized = false;
+        }
+    }
+
+    /**
+     * Hides the main application window.
+     */
+    @FXML
+    public void closeWindow() {
+        primaryStage.hide();
     }
 
     /**

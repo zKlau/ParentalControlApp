@@ -78,13 +78,14 @@ public class Program {
      * Constructs a new {@code Program} instance and starts the periodic monitoring timer.
      */
     public Program() {
+        user = db.getUsers().get(0);
         Timer timer = new Timer(true);
         timer.scheduleAtFixedRate(new TimerTask() {
             @Override
             public void run() {
                 try {
                     for (EventInfo event : db.getEvents(current_user)) {
-                        System.out.println("Checking events");
+                        //System.out.println("Checking events");
                         runEvent(event);
                     }
                     for (var i : db.getProcesses(current_user))
@@ -124,7 +125,7 @@ public class Program {
                 shouldRun = true;
             }
         } else {
-            long minutesSinceCreation = (System.currentTimeMillis() / 60000L) - createdAt;
+            long minutesSinceCreation = (System.currentTimeMillis() / 60000L)- createdAt;
             if (minutesSinceCreation >= eventTime) {
                 shouldRun = true;
             }
@@ -149,13 +150,12 @@ public class Program {
                     System.out.println("Unknown event: " + name);
                     break;
             }
-
             if (!event.isRepeat()) {
                 db.removeEvent(event);
             } else {
-                if (!event.isBefore_at()) {
+               if (!event.isBefore_at()) {
                     db.setEventTime(event, System.currentTimeMillis() / 60000L);
-                }
+               }
             }
         }
     }
