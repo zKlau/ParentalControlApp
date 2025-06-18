@@ -1,22 +1,28 @@
 package db;
 
-import Events.EventInfo;
-import Processes.ProcessInfo;
-import Processes.UserInfo;
-import javafx.application.Platform;
-
-import javax.crypto.SecretKeyFactory;
-import javax.crypto.spec.PBEKeySpec;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 import java.security.spec.InvalidKeySpecException;
 import java.security.spec.KeySpec;
-import java.sql.*;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Base64;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
+
+import javax.crypto.SecretKeyFactory;
+import javax.crypto.spec.PBEKeySpec;
+
+import Events.EventInfo;
+import Processes.ProcessInfo;
+import Processes.UserInfo;
+import javafx.application.Platform;
 
 /**
  * The {@code Database} class provides a singleton interface for managing all database operations
@@ -98,6 +104,13 @@ public class Database {
                     PROCESS_ID INTEGER NOT NULL,
                     TIME_LIMIT INTEGER NOT NULL,
                     FOREIGN KEY (PROCESS_ID) REFERENCES Processes(ID)
+                );
+                CREATE TABLE IF NOT EXISTS UsageTracking (
+                    ID INTEGER PRIMARY KEY AUTOINCREMENT,
+                    USER_ID INTEGER,
+                    NAME INTEGER NOT NULL,
+                    TIME INTEGER NOT NULL,
+                    FOREIGN KEY (USER_ID) REFERENCES Users(ID)
                 );
                 CREATE TABLE IF NOT EXISTS Events (
                     ID INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -203,6 +216,63 @@ public class Database {
         });
     }
 
+
+    /**
+     * Increments the total tracked time for a process by 2 seconds.
+     * This operation is performed asynchronously.
+     *
+     * @param prs The Process to update.
+     */
+    public void updateUsageTime(ProcessInfo prs) {
+        executeDatabaseTask(() -> {
+            try (PreparedStatement stmt = con.prepareStatement(
+                    "UPDATE UsageTracking SET TIME=TIME+2 WHERE USER_ID = ? and NAME = ?")) {
+                stmt.setInt(1, prs.getUser_id());
+                stmt.setString(2, prs.getProcess_name());
+                stmt.executeUpdate();
+            } catch (SQLException e) {
+                System.err.println("Error updating process time: " + e.getMessage());
+            }
+        });
+    }
+
+    public boolean isUsageTracked(ProcessInfo prs) {
+        try (PreparedStatement checkStmt = con.prepareStatement(
+                "SELECT * FROM UsageTracking WHERE NAME = ? AND USER_ID = ?")) {
+            checkStmt.setString(1, prs.getProcess_name());
+            checkStmt.setInt(2, prs.getUser_id());
+            try (ResultSet rs = checkStmt.executeQuery()) {
+                return rs.next();
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+    }
+    public void addUsageTime(ProcessInfo prs) {
+        executeDatabaseTask(() -> {
+            try (PreparedStatement checkStmt = con.prepareStatement(
+                    "Select * from UsageTracking  WHERE NAME= ? and USER_ID=?")) {
+                checkStmt.setInt(2, prs.getId());
+                checkStmt.setInt(1, prs.getUser_id());
+                System.out.println("Checking if usage time exists for process: " + prs.getProcess_name());
+                try (ResultSet rs = checkStmt.executeQuery()) {
+                    if (!rs.next()) {
+                        try (PreparedStatement updateStmt = con.prepareStatement(
+                                "INSERT INTO UsageTracking (USER_ID,NAME,TIME) VALUES (?,?,?)")) {
+                                    System.out.println("Adding usage time for process: " + prs.getProcess_name());
+                            updateStmt.setInt(1, prs.getUser_id());
+                            updateStmt.setString(2, prs.getProcess_name());
+                            updateStmt.setInt(3,0);
+                            updateStmt.executeUpdate();
+                            return;
+                        }
+                    }
+                }
+            } catch (SQLException e) {
+                System.err.println("Error setting time limit: " + e.getMessage());
+            }
+        });
+    }
     /**
      * Increments the total tracked time for a process by 2 seconds.
      * This operation is performed asynchronously.

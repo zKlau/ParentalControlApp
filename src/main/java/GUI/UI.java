@@ -12,11 +12,15 @@ import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
 
+import java.awt.*;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
 import Processes.Program;
+import javafx.scene.control.Button;
+import javafx.scene.control.Label;
+import javafx.scene.control.MenuItem;
 import javafx.scene.layout.HBox;
 import javafx.stage.Screen;
 import javafx.stage.Stage;
@@ -103,6 +107,12 @@ public class UI {
         yOffset = event.getSceneY();
     }
 
+
+    @FXML
+    public void mainMenuQuit() {
+        //SystemTray.getSystemTray().remove(trayIcon);
+        Platform.exit();
+    }
     /**
      * Handles mouse drag event for window dragging.
      */

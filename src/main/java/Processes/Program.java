@@ -1,12 +1,10 @@
 package Processes;
 
-import Events.EventInfo;
-import GUI.UI;
-import db.Database;
+import java.awt.AWTException;
+import java.awt.Dimension;
+import java.awt.Rectangle;
 import java.awt.Robot;
-
-import javax.imageio.ImageIO;
-import java.awt.*;
+import java.awt.Toolkit;
 import java.awt.image.BufferedImage;
 import java.io.BufferedReader;
 import java.io.File;
@@ -14,8 +12,15 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.Set;
 import java.util.Timer;
 import java.util.TimerTask;
+
+import javax.imageio.ImageIO;
+
+import Events.EventInfo;
+import GUI.UI;
+import db.Database;
 
 /**
  * The {@code Program} class serves as the core logic and backend for the Parental Control App.
@@ -64,6 +69,19 @@ public class Program {
      */
     public UserInfo user;
 
+
+
+    private static final Set<String> WINDOWS_SYSTEM_PROCESSES = Set.of(
+    "System Idle Process", "System", "smss.exe", "csrss.exe", "wininit.exe", "services.exe",
+    "lsass.exe", "svchost.exe", "winlogon.exe", "explorer.exe", "spoolsv.exe", "dwm.exe",
+    "taskhostw.exe", "fontdrvhost.exe", "registry", "conhost.exe", "rundll32.exe", "audiodg.exe",
+    "WmiPrvSE.exe", "SearchIndexer.exe", "SearchUI.exe", "RuntimeBroker.exe", "SgrmBroker.exe",
+    "StartMenuExperienceHost.exe", "ShellExperienceHost.exe", "SecurityHealthSystray.exe",
+    "msmpeng.exe", "NisSrv.exe", "ctfmon.exe", "sihost.exe", "backgroundTaskHost.exe",
+    "AppVShNotify.exe", "AppVClient.exe"
+);
+
+
     /**
      *  Set the user with the first user from the list
      * @return user selection status
@@ -95,6 +113,8 @@ public class Program {
     public Program() {
         if (!setUser()) {
             mainLoop();
+        } else {
+            mainLoop();
         }
     }
 
@@ -111,6 +131,7 @@ public class Program {
                         //System.out.println("Checking events");
                         runEvent(event);
                     }
+
                     for (var i : db.getProcesses(current_user))
                         if (isProcessRunning(i.getProcess_name())) {
                             db.updateTime(i.getId());
@@ -119,6 +140,7 @@ public class Program {
                                 terminateProcess(i.getProcess_name());
                             }
                         }
+                    trackAllProcesses();
                 } catch (Exception e) {
                     System.err.println("Error during process monitoring: " + e.getMessage());
                 }
@@ -127,6 +149,37 @@ public class Program {
                 }
             }
         }, 0, 3000);
+    }
+
+
+
+    public void trackAllProcesses() {
+        try {
+        BufferedReader prs = getRunningProcesses();
+        String line;
+        while ((line = prs.readLine()) != null) {
+            String[] parts = line.split(" ");
+            String processName = parts[0];
+
+            // Skip system processes
+            if (WINDOWS_SYSTEM_PROCESSES.contains(processName)) {
+                continue;
+            }
+
+            System.out.println(processName);
+
+            ProcessInfo pr = new ProcessInfo(0, current_user, processName, 0);
+            if (!db.isUsageTracked(pr)) {
+                db.addUsageTime(pr);
+                System.out.println("Tracking new process: " + processName);
+            } else {
+                System.out.println("Already Tracking");
+                db.updateUsageTime(pr);
+            }
+        }
+    } catch (IOException e) {
+        throw new RuntimeException(e);
+    }
     }
     /**
      * Executes the specified {@link EventInfo} if its scheduled time has arrived.
@@ -250,6 +303,7 @@ public class Program {
 
             while ((line = buffer.readLine()) != null) {
                 if (line.toLowerCase().startsWith(pname.toLowerCase()) || line.toLowerCase().contains(pname.toLowerCase())) {
+                    System.out.println("exista");
                     processes.add(line.split(" ")[0]);
                 }
             }
