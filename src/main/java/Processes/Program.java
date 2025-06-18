@@ -65,6 +65,21 @@ public class Program {
     public UserInfo user;
 
     /**
+     *  Set the user with the first user from the list
+     * @return user selection status
+     */
+    public boolean setUser() {
+        ArrayList<UserInfo> u = db.getUsers();
+        if(u.size() > 0) {
+            user = u.get(0);
+            return true;
+        } else {
+            user = null;
+            return false;
+        }
+    }
+
+    /**
      * Reference to the main UI controller.
      */
     public UI ui;
@@ -78,7 +93,15 @@ public class Program {
      * Constructs a new {@code Program} instance and starts the periodic monitoring timer.
      */
     public Program() {
-        user = db.getUsers().get(0);
+        if (!setUser()) {
+            mainLoop();
+        }
+    }
+
+    /**
+     * Starts the periodic monitoring timer
+    */
+    public void mainLoop() {
         Timer timer = new Timer(true);
         timer.scheduleAtFixedRate(new TimerTask() {
             @Override
@@ -105,7 +128,6 @@ public class Program {
             }
         }, 0, 3000);
     }
-
     /**
      * Executes the specified {@link EventInfo} if its scheduled time has arrived.
      * Handles shutdown, logout, and screenshot events.
@@ -203,7 +225,15 @@ public class Program {
         e.printStackTrace();
     }
 }
+    public static BufferedReader getRunningProcesses() {
+        try {
+            Process process = Runtime.getRuntime().exec("tasklist");
 
+            return new BufferedReader(new InputStreamReader(process.getInputStream()));
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
 
     /**
      * Returns a list of running processes whose names match or contain the given name.
@@ -214,9 +244,7 @@ public class Program {
     public static ArrayList<String> getRunningProcessesByName(String pname) {
         ArrayList<String> processes = new ArrayList<>();
         try {
-            Process process = Runtime.getRuntime().exec("tasklist");
-
-            BufferedReader buffer = new BufferedReader(new InputStreamReader(process.getInputStream()));
+            BufferedReader buffer = getRunningProcesses();
 
             String line;
 
@@ -232,7 +260,9 @@ public class Program {
         return processes;
     }
 
-    /**
+
+
+        /**
      * Checks if a process with the given name is currently running.
      *
      * @param pname The process name to check.
@@ -240,9 +270,7 @@ public class Program {
      */
     public static boolean isProcessRunning(String pname) {
         try {
-            Process process = Runtime.getRuntime().exec("tasklist");
-
-            BufferedReader buffer = new BufferedReader(new InputStreamReader(process.getInputStream()));
+           BufferedReader buffer = getRunningProcesses();
 
             String line;
 

@@ -314,8 +314,16 @@ public class UI {
      * Updates the users menu and repopulates the ListViews with the current user's data.
      */
     public void updateMenu() {
-        populateUsersMenu(null);
-        populateProgramList(program.user);
+        if (program.user == null) {
+            program.setUser();
+            program.mainLoop();
+            program.allow_connection = true;
+            program.current_user = program.user.getId() - 1;
+            currentUser.setText("Current user: " + program.user.getName() + " (" + program.user.getId() + ")");
+        } else {
+            populateUsersMenu(null);
+            populateProgramList(program.user);
+        }
     }
 
     /**

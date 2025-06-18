@@ -62,10 +62,13 @@ public class CreateUserController {
     public void createUser() {
         System.out.println("Creating user");
         String userName = userNameField.getText();
-        if (!userName.isBlank() && program != null && program.db.createUser(userName)) {
+        if (!userName.isBlank() && program != null && program.db.createUser(userName, () -> {
             if (uiController != null) {
                 uiController.updateMenu();
             }
+        })) {
+            
+            
             Stage stage = (Stage) userNameField.getScene().getWindow();
             stage.close();
             System.out.println("User created");

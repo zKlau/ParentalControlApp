@@ -3,6 +3,7 @@ package db;
 import Events.EventInfo;
 import Processes.ProcessInfo;
 import Processes.UserInfo;
+import javafx.application.Platform;
 
 import javax.crypto.SecretKeyFactory;
 import javax.crypto.spec.PBEKeySpec;
@@ -419,13 +420,17 @@ public class Database {
      * @param name The name of the new user.
      * @return {@code true} if the user was created, {@code false} if the user already exists.
      */
-    public synchronized boolean createUser(String name) {
+    public synchronized boolean createUser(String name, Runnable onCreated) {
         if (!isUserName(name)) {
             executeDatabaseTask(() -> {
                 try (PreparedStatement stmt = con.prepareStatement("INSERT INTO Users (NAME,IP) VALUES (?,?)")) {
                     stmt.setString(1, name);
                     stmt.setString(2, "192.168.1.1");
                     stmt.executeUpdate();
+
+                    if (onCreated != null){
+                        Platform.runLater(onCreated);
+                    }
                     System.out.println("User created: " + name);
                 } catch (SQLException e) {
                     System.err.println("Error setting time limit: " + e.getMessage());
