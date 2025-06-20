@@ -140,7 +140,6 @@ public class Program {
                                 terminateProcess(i.getProcess_name());
                             }
                         }
-                    trackAllProcesses();
                 } catch (Exception e) {
                     System.err.println("Error during process monitoring: " + e.getMessage());
                 }
@@ -149,6 +148,14 @@ public class Program {
                 }
             }
         }, 0, 3000);
+        new Thread( () -> {
+            try {
+                    trackAllProcesses();
+                    Thread.sleep(6000);
+                } catch (Exception e) {
+                    System.err.println("Error during process tracking: " + e.getMessage());
+                }
+        }).start();
     }
 
 
@@ -166,14 +173,14 @@ public class Program {
                 continue;
             }
 
-            System.out.println(processName);
+           // System.out.println(processName);
 
             ProcessInfo pr = new ProcessInfo(0, current_user, processName, 0);
             if (!db.isUsageTracked(pr)) {
                 db.addUsageTime(pr);
-                System.out.println("Tracking new process: " + processName);
+                //System.out.println("Tracking new process: " + processName);
             } else {
-                System.out.println("Already Tracking");
+                //System.out.println("Already Tracking");
                 db.updateUsageTime(pr);
             }
         }

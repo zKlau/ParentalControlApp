@@ -10,6 +10,8 @@ import javafx.geometry.Rectangle2D;
 import javafx.scene.Group;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
+import javafx.scene.chart.LineChart;
+import javafx.scene.chart.PieChart;
 import javafx.scene.control.*;
 
 import java.awt.*;
@@ -363,6 +365,32 @@ public class UI {
         }
     }
 
+
+    @FXML
+    public PieChart pieChart1;
+    @FXML
+    public LineChart linechart1;
+
+    public void updateDashboard() {
+            pieChart1.getData().clear();
+            linechart1.getData().clear();
+            pieChart1.setTitle("Processes by TIME");
+            linechart1.setTitle("Processes Over Time");
+            ArrayList<ProcessInfo> processes = program.db.getUsageTracking(program.user);
+            pieChart1.getData().clear();
+            linechart1.getData().clear();
+            if (processes.isEmpty()) {
+                pieChart1.setTitle("No processes found for user " + program.user.getName());
+            } else {
+                for (ProcessInfo process : processes) {
+                    System.out.println(process.getProcess_name());
+                    PieChart.Data data = new PieChart.Data(process.getProcess_name(), process.getTotal_time());
+                    pieChart1.getData().add(data);
+                    // Add data to line chart
+                }
+            }
+    }
+
     /**
      * Handles the action for adding a new process entry.
      * This will open the process editing window in "create" mode.
@@ -423,6 +451,8 @@ public class UI {
     private AnchorPane eventsGroup;
     @FXML
     private AnchorPane userGroup;
+    @FXML
+    private AnchorPane dashboardGroup;
 
     /**
      * Shows the processes group and hides the others.
@@ -432,6 +462,7 @@ public class UI {
         eventsGroup.setVisible(false);
         processGroup.setVisible(true);
         userGroup.setVisible(false);
+        dashboardGroup.setVisible(false);
     }
 
     /**
@@ -442,6 +473,7 @@ public class UI {
         processGroup.setVisible(false);
         eventsGroup.setVisible(true);
         userGroup.setVisible(false);
+        dashboardGroup.setVisible(false);
     }
 
     /**
@@ -452,5 +484,18 @@ public class UI {
         userGroup.setVisible(true);
         processGroup.setVisible(false);
         eventsGroup.setVisible(false);
+        dashboardGroup.setVisible(false);
+    }
+
+    /**
+     * Shows the dashboard group and hides the others.
+     */
+    @FXML
+    public void dashboardButtonPressed() {
+        userGroup.setVisible(false);
+        processGroup.setVisible(false);
+        eventsGroup.setVisible(false);
+        dashboardGroup.setVisible(true);
+        updateDashboard();
     }
 }

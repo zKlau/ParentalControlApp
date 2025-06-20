@@ -1,5 +1,6 @@
 package db;
 
+import java.lang.reflect.Array;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 import java.security.spec.InvalidKeySpecException;
@@ -248,6 +249,28 @@ public class Database {
             throw new RuntimeException(e);
         }
     }
+    public ArrayList<ProcessInfo> getUsageTracking(UserInfo user) {
+        ArrayList<ProcessInfo> resArray = new ArrayList<>();
+        try (PreparedStatement checkQuery = con.prepareStatement(
+                "SELECT * FROM UsageTracking WHERE USER_ID = ?")) {
+            checkQuery.setInt(1, user.getId()-1);
+            try (ResultSet rs = checkQuery.executeQuery()) {
+                while (rs.next()) {
+                    int id = rs.getInt("ID");
+                    int userId = rs.getInt("USER_ID");
+                    String processName = rs.getString("NAME");
+                    int time = rs.getInt("TIME");
+                    ProcessInfo processInfo = new ProcessInfo(id, userId, processName, 0, 0);
+                    processInfo.setTotal_time(time);
+                    resArray.add(processInfo);
+                }
+            }
+        } catch (SQLException e) {
+            System.err.println("Error retrieving usage tracking: " + e.getMessage());
+        }
+        return resArray;
+    }
+
     public void addUsageTime(ProcessInfo prs) {
         executeDatabaseTask(() -> {
             try (PreparedStatement checkStmt = con.prepareStatement(
