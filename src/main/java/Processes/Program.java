@@ -168,7 +168,6 @@ public class Program {
             String[] parts = line.split(" ");
             String processName = parts[0];
 
-            // Skip system processes
             if (WINDOWS_SYSTEM_PROCESSES.contains(processName)) {
                 continue;
             }

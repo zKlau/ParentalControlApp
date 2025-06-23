@@ -1,6 +1,5 @@
 package db;
 
-import java.lang.reflect.Array;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 import java.security.spec.InvalidKeySpecException;
@@ -111,7 +110,8 @@ public class Database {
                     USER_ID INTEGER,
                     NAME INTEGER NOT NULL,
                     TIME INTEGER NOT NULL,
-                    FOREIGN KEY (USER_ID) REFERENCES Users(ID)
+                    FOREIGN KEY (USER_ID) REFERENCES Users(ID),
+                    UNIQUE(USER_ID,NAME)
                 );
                 CREATE TABLE IF NOT EXISTS Events (
                     ID INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -272,30 +272,24 @@ public class Database {
     }
 
     public void addUsageTime(ProcessInfo prs) {
-        executeDatabaseTask(() -> {
-            try (PreparedStatement checkStmt = con.prepareStatement(
-                    "Select * from UsageTracking  WHERE NAME= ? and USER_ID=?")) {
-                checkStmt.setInt(2, prs.getId());
-                checkStmt.setInt(1, prs.getUser_id());
-                System.out.println("Checking if usage time exists for process: " + prs.getProcess_name());
-                try (ResultSet rs = checkStmt.executeQuery()) {
-                    if (!rs.next()) {
-                        try (PreparedStatement updateStmt = con.prepareStatement(
-                                "INSERT INTO UsageTracking (USER_ID,NAME,TIME) VALUES (?,?,?)")) {
-                                    System.out.println("Adding usage time for process: " + prs.getProcess_name());
-                            updateStmt.setInt(1, prs.getUser_id());
-                            updateStmt.setString(2, prs.getProcess_name());
-                            updateStmt.setInt(3,0);
-                            updateStmt.executeUpdate();
-                            return;
-                        }
-                    }
-                }
-            } catch (SQLException e) {
-                System.err.println("Error setting time limit: " + e.getMessage());
+    executeDatabaseTask(() -> {
+        try (PreparedStatement insertStmt = con.prepareStatement(
+                "INSERT INTO UsageTracking (USER_ID, NAME, TIME) VALUES (?, ?, ?)")) {
+            insertStmt.setInt(1, prs.getUser_id());
+            insertStmt.setString(2, prs.getProcess_name());
+            insertStmt.setInt(3, 0);
+            insertStmt.executeUpdate();
+            System.out.println("Adding usage time for process: " + prs.getProcess_name());
+        } catch (SQLException e) {
+            // Ignore duplicate entry errors (UNIQUE constraint violation)
+            if (e.getMessage().contains("UNIQUE") || e.getErrorCode() == 19) { // 19 is SQLITE_CONSTRAINT
+                // Duplicate, ignore
+            } else {
+                System.err.println("Error adding usage time: " + e.getMessage());
             }
-        });
-    }
+        }
+    });
+}
     /**
      * Increments the total tracked time for a process by 2 seconds.
      * This operation is performed asynchronously.

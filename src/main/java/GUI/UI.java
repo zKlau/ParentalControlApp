@@ -1,34 +1,32 @@
 package GUI;
 
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.util.ArrayList;
+
 import Events.EventInfo;
 import Processes.ProcessInfo;
+import Processes.Program;
 import Processes.UserInfo;
 import javafx.application.Platform;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.geometry.Rectangle2D;
-import javafx.scene.Group;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.chart.LineChart;
 import javafx.scene.chart.PieChart;
-import javafx.scene.control.*;
-
-import java.awt.*;
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.util.ArrayList;
-import Processes.Program;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
+import javafx.scene.control.ListCell;
+import javafx.scene.control.ListView;
+import javafx.scene.control.MenuButton;
 import javafx.scene.control.MenuItem;
+import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.HBox;
 import javafx.stage.Screen;
 import javafx.stage.Stage;
-
-import javafx.scene.layout.AnchorPane;
-import javafx.scene.transform.Scale;
 
 /**
  * The {@code UI} class is responsible for managing the graphical user interface logic of the application.
@@ -373,6 +371,7 @@ public class UI {
 
     public void updateDashboard() {
             pieChart1.getData().clear();
+            pieChart1.setMaxSize(Double.MAX_VALUE, Double.MAX_VALUE);
             linechart1.getData().clear();
             pieChart1.setTitle("Processes by TIME");
             linechart1.setTitle("Processes Over Time");
@@ -386,7 +385,6 @@ public class UI {
                     System.out.println(process.getProcess_name());
                     PieChart.Data data = new PieChart.Data(process.getProcess_name(), process.getTotal_time());
                     pieChart1.getData().add(data);
-                    // Add data to line chart
                 }
             }
     }
