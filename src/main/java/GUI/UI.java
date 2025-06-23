@@ -371,7 +371,6 @@ public class UI {
 
     public void updateDashboard() {
             pieChart1.getData().clear();
-            pieChart1.setMaxSize(Double.MAX_VALUE, Double.MAX_VALUE);
             linechart1.getData().clear();
             pieChart1.setTitle("Processes by TIME");
             linechart1.setTitle("Processes Over Time");
