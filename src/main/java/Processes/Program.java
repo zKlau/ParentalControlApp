@@ -15,6 +15,7 @@ import java.util.Calendar;
 import java.util.Set;
 import java.util.Timer;
 import java.util.TimerTask;
+import org.tinylog.Logger;
 
 import javax.imageio.ImageIO;
 
@@ -123,6 +124,7 @@ public class Program {
     */
     public void mainLoop() {
         Timer timer = new Timer(true);
+        Logger.info("Application starting!");
         timer.scheduleAtFixedRate(new TimerTask() {
             @Override
             public void run() {
@@ -141,7 +143,7 @@ public class Program {
                             }
                         }
                 } catch (Exception e) {
-                    System.err.println("Error during process monitoring: " + e.getMessage());
+                    Logger.warn("Error during process monitoring: " + e.getMessage());
                 }
                 if (ui != null) {
                     javafx.application.Platform.runLater(() -> ui.updateMenu());
@@ -177,7 +179,7 @@ public class Program {
             ProcessInfo pr = new ProcessInfo(0, current_user, processName, 0);
             if (!db.isUsageTracked(pr)) {
                 db.addUsageTime(pr);
-                //System.out.println("Tracking new process: " + processName);
+                Logger.info("Tracking new process: " + processName);
             } else {
                 //System.out.println("Already Tracking");
                 db.updateUsageTime(pr);
@@ -216,19 +218,19 @@ public class Program {
             String name = event.getEvent_name();
             switch (name) {
                 case "Computer Shutdown":
-                    System.out.println("Trigger: Computer Shutdown");
+                    Logger.info("Trigger: Computer Shutdown");
                     shutdownComputer();
                     break;
                 case "User System logout":
-                    System.out.println("Trigger: User System logout");
+                    Logger.info("Trigger: User System logout");
                     logoutUser();
                     break;
                 case "Screenshot":
-                    System.out.println("Trigger: Screenshot");
+                    Logger.info("Trigger: Screenshot");
                     takeScreenshot();
                     break;
                 default:
-                    System.out.println("Unknown event: " + name);
+                    Logger.info("Unknown event: " + name);
                     break;
             }
             if (!event.isRepeat()) {
@@ -309,7 +311,6 @@ public class Program {
 
             while ((line = buffer.readLine()) != null) {
                 if (line.toLowerCase().startsWith(pname.toLowerCase()) || line.toLowerCase().contains(pname.toLowerCase())) {
-                    System.out.println("exista");
                     processes.add(line.split(" ")[0]);
                 }
             }
@@ -363,7 +364,7 @@ public class Program {
             Process process = Runtime.getRuntime().exec("taskkill /F /IM " + pname);
             process.waitFor();
                */
-            System.out.println("Process: " + pname + " terminated");
+            Logger.info("Process: " + pname + " terminated");
         } catch (InterruptedException e) {
             throw new RuntimeException(e);
         } catch (IOException e) {

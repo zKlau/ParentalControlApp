@@ -27,6 +27,7 @@ import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.HBox;
 import javafx.stage.Screen;
 import javafx.stage.Stage;
+import org.tinylog.Logger;
 
 /**
  * The {@code UI} class is responsible for managing the graphical user interface logic of the application.
@@ -378,10 +379,10 @@ public class UI {
             pieChart1.getData().clear();
             linechart1.getData().clear();
             if (processes.isEmpty()) {
+                Logger.warn("No processes found for user " + program.user.getName());
                 pieChart1.setTitle("No processes found for user " + program.user.getName());
             } else {
                 for (ProcessInfo process : processes) {
-                    System.out.println(process.getProcess_name());
                     PieChart.Data data = new PieChart.Data(process.getProcess_name(), process.getTotal_time());
                     pieChart1.getData().add(data);
                 }
@@ -420,7 +421,7 @@ public class UI {
     @FXML
     public void deleteUser() {
         program.db.deleteUser(program.user);
-        System.out.println("Deleting user");
+        Logger.warn("Deleting user");
     }
 
     /**
@@ -429,13 +430,14 @@ public class UI {
      */
     @FXML
     public void showRunningProcesses() {
-        System.out.println("Showing running processes");
+        Logger.info("Showing running processes");
         try {
             Process process = Runtime.getRuntime().exec("tasklist");
             BufferedReader buffer = new BufferedReader(new InputStreamReader(process.getInputStream()));
             String line;
             while ((line = buffer.readLine()) != null) {
-                System.out.println(line);
+                continue
+                //System.out.println(line);
             }
         } catch (IOException e) {
             throw new RuntimeException("Failed to execute tasklist command", e);

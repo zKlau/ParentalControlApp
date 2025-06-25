@@ -13,7 +13,7 @@ import javafx.scene.layout.Region;
 import javafx.scene.paint.Color;
 import javafx.stage.Stage;
 import javafx.stage.StageStyle;
-
+import org.tinylog.Logger;
 import java.awt.*;
 import java.io.IOException;
 import java.net.URL;
@@ -84,7 +84,7 @@ public void init() throws Exception {
         }).start();
 
         Runtime.getRuntime().addShutdownHook(new Thread(() -> {
-            System.out.println("Shutting down app...");
+            Logger.warn("Shutting down app...");
             program.webFilter.unblockSites(program.db.getURLS(program.user));
         }));
         displayPIN(stage);
@@ -188,7 +188,7 @@ public void init() throws Exception {
      */
     @Override
     public void stop() throws Exception {
-        System.out.println("Application is stopping...");
+        Logger.warn("Application is stopping...");
         System.exit(0);
     }
 
@@ -199,7 +199,7 @@ public void init() throws Exception {
      */
     private void addAppToTray(Stage stage) {
         if (!SystemTray.isSupported()) {
-            System.out.println("System tray not supported!");
+            Logger.warn("System tray not supported!");
             return;
         }
 
@@ -207,7 +207,7 @@ public void init() throws Exception {
             Toolkit.getDefaultToolkit();
 
             if (trayIcon != null) {
-                System.out.println("Tray icon already exists");
+                Logger.warn("Tray icon already exists");
                 return;
             }
 
@@ -275,7 +275,7 @@ public void init() throws Exception {
      */
     @FXML
     public void verifyPassword() {
-        System.out.println("Verifying PIN");
+        Logger.info("Verifying PIN");
         hidePINWindowAndShowMain();
     }
 }

@@ -1,5 +1,9 @@
 package GUI;
 
+import java.awt.SystemTray;
+
+import org.tinylog.Logger;
+
 import javafx.application.Platform;
 import javafx.fxml.FXML;
 import javafx.geometry.Rectangle2D;
@@ -7,8 +11,6 @@ import javafx.scene.control.PasswordField;
 import javafx.scene.layout.HBox;
 import javafx.stage.Screen;
 import javafx.stage.Stage;
-
-import java.awt.*;
 
 /**
  * The {@code PasswordController} class manages the logic for verifying the admin password
@@ -65,7 +67,7 @@ public class PasswordController {
      */
     @FXML
     public void verifyPassword() {
-        System.out.println("Verifying Password");
+        Logger.info("Verifying Password");
         if (mainApp.getProgram().db.checkPassword(passwordField.getText())) {
             mainApp.hidePINWindowAndShowMain();
             passwordField.setText("");
