@@ -8,6 +8,7 @@ import javafx.scene.Group;
 import javafx.scene.control.*;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
+import org.tinylog.Logger;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -131,7 +132,7 @@ public class processEditController {
      */
     @FXML
     public void saveProcess() {
-        System.out.println("Saving Process");
+        Logger.info("Saving Process");
         if (prs == null && !processUrl.getText().isBlank()) {
             System.out.println("ss");
             ProcessInfo newProcess = new ProcessInfo(0, program.current_user, processUrl.getText(), 0, Integer.parseInt(time_limit.getText()));
@@ -212,12 +213,14 @@ public class processEditController {
      */
     @FXML
     public void openFileSelection() {
-        System.out.println("Opening File Explorer");
+        Logger.info("Opening File Explorer");
         FileChooser fil_chooser = new FileChooser();
         File file = fil_chooser.showOpenDialog(null);
 
         if (file != null) {
-            processUrl.setText(file.getAbsolutePath());
+            String[] path = (file.getAbsolutePath()).split("\\\\");
+            System.out.println(path[path.length-1]);
+            processUrl.setText(path[path.length-1]);
         }
     }
 }

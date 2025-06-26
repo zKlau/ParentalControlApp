@@ -431,7 +431,7 @@ public class UI {
             BufferedReader buffer = new BufferedReader(new InputStreamReader(process.getInputStream()));
             String line;
             while ((line = buffer.readLine()) != null) {
-                continue
+                continue;
                 //System.out.println(line);
             }
         } catch (IOException e) {
