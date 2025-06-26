@@ -367,17 +367,12 @@ public class UI {
 
     @FXML
     public PieChart pieChart1;
-    @FXML
-    public LineChart linechart1;
 
     public void updateDashboard() {
             pieChart1.getData().clear();
-            linechart1.getData().clear();
             pieChart1.setTitle("Processes by TIME");
-            linechart1.setTitle("Processes Over Time");
             ArrayList<ProcessInfo> processes = program.db.getUsageTracking(program.user);
             pieChart1.getData().clear();
-            linechart1.getData().clear();
             if (processes.isEmpty()) {
                 Logger.warn("No processes found for user " + program.user.getName());
                 pieChart1.setTitle("No processes found for user " + program.user.getName());

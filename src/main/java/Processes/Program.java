@@ -251,6 +251,7 @@ public class Program {
         try {
             Runtime.getRuntime().exec("shutdown -s -t 0");
         } catch (Exception e) {
+            Logger.error(e.printStackTrace());
             e.printStackTrace();
         }
     }
@@ -262,6 +263,7 @@ public class Program {
         try {
             Runtime.getRuntime().exec("shutdown -l");
         } catch (Exception e) {
+            Logger.error(e.printStackTrace());
             e.printStackTrace();
         }
     }
@@ -283,6 +285,7 @@ public class Program {
         BufferedImage image = r.createScreenCapture(capture);
         ImageIO.write(image, "jpg", new File(path));
     } catch (AWTException | IOException e) {
+        Logger.error(e.printStackTrace());
         e.printStackTrace();
     }
 }

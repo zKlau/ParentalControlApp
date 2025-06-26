@@ -19,6 +19,8 @@ import java.util.concurrent.LinkedBlockingQueue;
 import javax.crypto.SecretKeyFactory;
 import javax.crypto.spec.PBEKeySpec;
 
+import org.tinylog.Logger;
+
 import Events.EventInfo;
 import Processes.ProcessInfo;
 import Processes.UserInfo;
@@ -285,6 +287,7 @@ public class Database {
             if (e.getMessage().contains("UNIQUE") || e.getErrorCode() == 19) { // 19 is SQLITE_CONSTRAINT
                 // Duplicate, ignore
             } else {
+                Logger.error(e.getMessage());
                 System.err.println("Error adding usage time: " + e.getMessage());
             }
         }
@@ -303,6 +306,7 @@ public class Database {
                 stmt.setInt(1, process_id);
                 stmt.executeUpdate();
             } catch (SQLException e) {
+                Logger.error(e.getMessage());
                 System.err.println("Error updating process time: " + e.getMessage());
             }
         });
@@ -339,6 +343,7 @@ public class Database {
                     System.out.println("Time limit added for PID: " + prs.getId() + " with time limit: " + prs.getTime_limit());
                 }
             } catch (SQLException e) {
+                Logger.error(e.getMessage());
                 System.err.println("Error setting time limit: " + e.getMessage());
             }
         });
@@ -518,8 +523,10 @@ public class Database {
                     if (onCreated != null){
                         Platform.runLater(onCreated);
                     }
+                    Logger.info("User created: " + name);
                     System.out.println("User created: " + name);
                 } catch (SQLException e) {
+                    Logger.error(e.getMessage());
                     System.err.println("Error setting time limit: " + e.getMessage());
                 }
             });
@@ -588,7 +595,7 @@ public class Database {
                 stmt.setInt(2, prs.getId());
                 stmt.executeUpdate();
             } catch (SQLException e) {
-                System.err.println("Error setting time limit: " + e.getMessage());
+                Logger.error("Error setting time limit: " + e.getMessage());
             }
         });
         executeDatabaseTask(() -> {
@@ -597,7 +604,7 @@ public class Database {
                 stmt.setInt(2, prs.getId());
                 stmt.executeUpdate();
             } catch (SQLException e) {
-                System.err.println("Error setting time limit: " + e.getMessage());
+                Logger.error("Error setting time limit: " + e.getMessage());
             }
         });
     }
@@ -615,7 +622,7 @@ public class Database {
                 stmt.setInt(2, evt.getUser_id());
                 try (ResultSet rs = stmt.executeQuery()) {
                     if (rs.next()) {
-                        System.out.println("Event already exists.");
+                        Logger.error("Event already exists.");
                         return;
                     }
                 }
@@ -631,7 +638,7 @@ public class Database {
                     System.out.println("Event added: " + evt.getEvent_name());
                 }
             } catch (SQLException e) {
-                System.err.println("Error adding Event: " + e.getMessage());
+                Logger.error("Error adding Event: " + e.getMessage());
             }
         });
     }
@@ -690,9 +697,9 @@ public class Database {
                 stmt.setInt(1, (int)created_at);
                 stmt.setInt(2, evt.getId());
                 stmt.executeUpdate();
-                System.out.println("Event creation time updated: " + evt.getEvent_name());
+                Logger.info("Event creation time updated: " + evt.getEvent_name());
             } catch (SQLException e) {
-                System.err.println("Error updating Event: " + e.getMessage());
+                Logger.error("Error updating Event: " + e.getMessage());
             }
         });
     }
@@ -713,9 +720,9 @@ public class Database {
                 stmt.setInt(3, evt.isBefore_at() ? 1 : 0);
                 stmt.setInt(5, evt.getId());
                 stmt.executeUpdate();
-                System.out.println("Event updated: " + evt.getEvent_name());
+                Logger.info("Event updated: " + evt.getEvent_name());
             } catch (SQLException e) {
-                System.err.println("Error updating Event: " + e.getMessage());
+                Logger.error("Error updating Event: " + e.getMessage());
             }
         });
     }
