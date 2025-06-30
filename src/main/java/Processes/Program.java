@@ -15,9 +15,10 @@ import java.util.Calendar;
 import java.util.Set;
 import java.util.Timer;
 import java.util.TimerTask;
-import org.tinylog.Logger;
 
 import javax.imageio.ImageIO;
+
+import org.tinylog.Logger;
 
 import Events.EventInfo;
 import GUI.UI;
@@ -130,7 +131,6 @@ public class Program {
             public void run() {
                 try {
                     for (EventInfo event : db.getEvents(current_user)) {
-                        //System.out.println("Checking events");
                         runEvent(event);
                     }
 
@@ -170,7 +170,7 @@ public class Program {
             String[] parts = line.split(" ");
             String processName = parts[0];
 
-            if (WINDOWS_SYSTEM_PROCESSES.contains(processName)) {
+            if (WINDOWS_SYSTEM_PROCESSES.contains(processName) || processName.contains(".exe") || processName.contains(".msi")) {
                 continue;
             }
 
@@ -251,7 +251,6 @@ public class Program {
         try {
             Runtime.getRuntime().exec("shutdown -s -t 0");
         } catch (Exception e) {
-            Logger.error(e.printStackTrace());
             e.printStackTrace();
         }
     }
@@ -263,7 +262,6 @@ public class Program {
         try {
             Runtime.getRuntime().exec("shutdown -l");
         } catch (Exception e) {
-            Logger.error(e.printStackTrace());
             e.printStackTrace();
         }
     }
@@ -285,7 +283,6 @@ public class Program {
         BufferedImage image = r.createScreenCapture(capture);
         ImageIO.write(image, "jpg", new File(path));
     } catch (AWTException | IOException e) {
-        Logger.error(e.printStackTrace());
         e.printStackTrace();
     }
 }
@@ -373,5 +370,23 @@ public class Program {
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
+    }
+
+    public void addDailyUsage() {
+        Calendar calendar = Calendar.getInstance();
+        int currentDay = calendar.get(Calendar.DAY_OF_MONTH);
+        int currentMonth = calendar.get(Calendar.MONTH) + 1;
+        int currentYear = calendar.get(Calendar.YEAR);
+        String date = String.format("%02d-%02d-%04d", currentDay, currentMonth, currentYear);
+
+        db.getUsageTracking(user).forEach(processInfo -> {
+            if(processInfo.getProcess_name().equals("svchost.exe")) {
+                DailyUsageInfo info = new DailyUsageInfo(user.getId(),date,processInfo.getTotal_time());
+                db.addDailyUsage(info);
+            }
+        });
+    };
+    public void checkDailyUsage() {
+
     }
 }

@@ -19,6 +19,7 @@ import java.util.concurrent.LinkedBlockingQueue;
 import javax.crypto.SecretKeyFactory;
 import javax.crypto.spec.PBEKeySpec;
 
+import Processes.DailyUsageInfo;
 import org.tinylog.Logger;
 
 import Events.EventInfo;
@@ -129,12 +130,20 @@ public class Database {
                     ID INTEGER PRIMARY KEY AUTOINCREMENT,
                     PASSWORD TEXT NOT NULL
                 );
+                CREATE TABLE IF NOT EXISTS DailyUsage (
+                    ID INTEGER PRIMARY KEY AUTOINCREMENT,
+                    USER_ID INTEGER NOT NULL,
+                    DATE TEXT NOT NULL,
+                    USAGE_SECONDS INTEGER NOT NULL DEFAULT 0,
+                    FOREIGN KEY (USER_ID) REFERENCES Users(ID),
+                    UNIQUE(USER_ID, DATE)
+                );
             """);
-            System.out.println("Database successfully created");
+            Logger.info("Database successfully created");
         } catch (SQLException e) {
             throw new RuntimeException(e);
         }
-        System.out.println("Successfully connected to database");
+        Logger.info("Successfully connected to database");
 
         dbThread = new Thread(() -> {
             while (true) {
@@ -142,7 +151,7 @@ public class Database {
                     Runnable task = taskQueue.take();
                     task.run();
                 } catch (InterruptedException e) {
-                    System.err.println("Database task thread interrupted!");
+                    Logger.error("Database task thread interrupted!");
                     break;
                 }
             }
@@ -184,7 +193,7 @@ public class Database {
                 stmt.setInt(2, prs.getUser_id());
                 try (ResultSet rs = stmt.executeQuery()) {
                     if (rs.next()) {
-                        System.out.println("Process already exists.");
+                         Logger.warn("Process already exists.");
                         return;
                     }
                 }
@@ -193,10 +202,10 @@ public class Database {
                     insertStmt.setInt(1, prs.getUser_id());
                     insertStmt.setString(2, prs.getProcess_name());
                     insertStmt.executeUpdate();
-                    System.out.println("Process added: " + prs.getProcess_name());
+                    Logger.info("Process added: " + prs.getProcess_name());
                 }
             } catch (SQLException e) {
-                System.err.println("Error adding process: " + e.getMessage());
+                Logger.error("Error adding process: " + e.getMessage());
             }
         });
 
@@ -210,7 +219,7 @@ public class Database {
                         prs.setId(rs.getInt("ID"));
                         setTimeLimit(prs);
                     } else {
-                        System.out.println("Process ID not found");
+                        Logger.warn("Process ID not found");
                     }
                 }
             } catch (SQLException e) {
@@ -234,11 +243,18 @@ public class Database {
                 stmt.setString(2, prs.getProcess_name());
                 stmt.executeUpdate();
             } catch (SQLException e) {
-                System.err.println("Error updating process time: " + e.getMessage());
+                Logger.error("Error updating process time: " + e.getMessage());
+                throw new RuntimeException(e);
             }
         });
     }
 
+    /**
+     * Checks if a process is already being tracked for usage for a specific user.
+     *
+     * @param prs The {@link ProcessInfo} object containing process and user details.
+     * @return {@code true} if the process is tracked, {@code false} otherwise.
+     */
     public boolean isUsageTracked(ProcessInfo prs) {
         try (PreparedStatement checkStmt = con.prepareStatement(
                 "SELECT * FROM UsageTracking WHERE NAME = ? AND USER_ID = ?")) {
@@ -251,6 +267,13 @@ public class Database {
             throw new RuntimeException(e);
         }
     }
+
+    /**
+     * Retrieves all usage tracking records for a specific user.
+     *
+     * @param user The {@link UserInfo} object representing the user.
+     * @return A list of {@link ProcessInfo} objects with usage time for each tracked process.
+     */
     public ArrayList<ProcessInfo> getUsageTracking(UserInfo user) {
         ArrayList<ProcessInfo> resArray = new ArrayList<>();
         try (PreparedStatement checkQuery = con.prepareStatement(
@@ -268,31 +291,36 @@ public class Database {
                 }
             }
         } catch (SQLException e) {
-            System.err.println("Error retrieving usage tracking: " + e.getMessage());
+            Logger.error("Error retrieving usage tracking: " + e.getMessage());
+            throw new RuntimeException(e);
         }
         return resArray;
     }
 
+    /**
+     * Adds a new usage tracking record for a process and user, if not already present.
+     * This operation is performed asynchronously.
+     *
+     * @param prs The {@link ProcessInfo} object containing process and user details.
+     */
     public void addUsageTime(ProcessInfo prs) {
-    executeDatabaseTask(() -> {
-        try (PreparedStatement insertStmt = con.prepareStatement(
-                "INSERT INTO UsageTracking (USER_ID, NAME, TIME) VALUES (?, ?, ?)")) {
-            insertStmt.setInt(1, prs.getUser_id());
-            insertStmt.setString(2, prs.getProcess_name());
-            insertStmt.setInt(3, 0);
-            insertStmt.executeUpdate();
-            System.out.println("Adding usage time for process: " + prs.getProcess_name());
-        } catch (SQLException e) {
-            // Ignore duplicate entry errors (UNIQUE constraint violation)
-            if (e.getMessage().contains("UNIQUE") || e.getErrorCode() == 19) { // 19 is SQLITE_CONSTRAINT
-                // Duplicate, ignore
-            } else {
-                Logger.error(e.getMessage());
-                System.err.println("Error adding usage time: " + e.getMessage());
+        executeDatabaseTask(() -> {
+            try (PreparedStatement insertStmt = con.prepareStatement(
+                    "INSERT INTO UsageTracking (USER_ID, NAME, TIME) VALUES (?, ?, ?)")) {
+                insertStmt.setInt(1, prs.getUser_id());
+                insertStmt.setString(2, prs.getProcess_name());
+                insertStmt.setInt(3, 0);
+                insertStmt.executeUpdate();
+                Logger.info("Adding usage time for process: " + prs.getProcess_name());
+            } catch (SQLException e) {
+                if (e.getMessage().contains("UNIQUE") || e.getErrorCode() == 19) {
+                } else {
+                    Logger.error("Error adding usage time: " + e.getMessage());
+                    throw new RuntimeException(e);
+                }
             }
-        }
-    });
-}
+        });
+    }
     /**
      * Increments the total tracked time for a process by 2 seconds.
      * This operation is performed asynchronously.
@@ -306,8 +334,8 @@ public class Database {
                 stmt.setInt(1, process_id);
                 stmt.executeUpdate();
             } catch (SQLException e) {
-                Logger.error(e.getMessage());
-                System.err.println("Error updating process time: " + e.getMessage());
+                Logger.error("Error updating process time: " + e.getMessage());
+                throw new RuntimeException(e);
             }
         });
     }
@@ -340,11 +368,11 @@ public class Database {
                     insertStmt.setInt(1, prs.getId());
                     insertStmt.setInt(2, prs.getTime_limit());
                     insertStmt.executeUpdate();
-                    System.out.println("Time limit added for PID: " + prs.getId() + " with time limit: " + prs.getTime_limit());
+                    Logger.info("Time limit added for PID: " + prs.getId() + " with time limit: " + prs.getTime_limit());
                 }
             } catch (SQLException e) {
-                Logger.error(e.getMessage());
-                System.err.println("Error setting time limit: " + e.getMessage());
+                Logger.error("Error setting time limit: " + e.getMessage());
+                throw new RuntimeException(e);
             }
         });
     }
@@ -526,8 +554,8 @@ public class Database {
                     Logger.info("User created: " + name);
                     System.out.println("User created: " + name);
                 } catch (SQLException e) {
-                    Logger.error(e.getMessage());
-                    System.err.println("Error setting time limit: " + e.getMessage());
+                    Logger.error("Error setting time limit: " + e.getMessage());
+                    throw new RuntimeException(e);
                 }
             });
             return true;
@@ -596,6 +624,7 @@ public class Database {
                 stmt.executeUpdate();
             } catch (SQLException e) {
                 Logger.error("Error setting time limit: " + e.getMessage());
+                throw new RuntimeException(e);
             }
         });
         executeDatabaseTask(() -> {
@@ -605,6 +634,7 @@ public class Database {
                 stmt.executeUpdate();
             } catch (SQLException e) {
                 Logger.error("Error setting time limit: " + e.getMessage());
+                throw new RuntimeException(e);
             }
         });
     }
@@ -639,6 +669,7 @@ public class Database {
                 }
             } catch (SQLException e) {
                 Logger.error("Error adding Event: " + e.getMessage());
+                throw new RuntimeException(e);
             }
         });
     }
@@ -700,6 +731,7 @@ public class Database {
                 Logger.info("Event creation time updated: " + evt.getEvent_name());
             } catch (SQLException e) {
                 Logger.error("Error updating Event: " + e.getMessage());
+                throw new RuntimeException(e);
             }
         });
     }
@@ -723,6 +755,7 @@ public class Database {
                 Logger.info("Event updated: " + evt.getEvent_name());
             } catch (SQLException e) {
                 Logger.error("Error updating Event: " + e.getMessage());
+                throw new RuntimeException(e);
             }
         });
     }
@@ -795,4 +828,46 @@ public class Database {
             }
         });
     }
+
+    public synchronized void addDailyUsage(DailyUsageInfo info) {
+        executeDatabaseTask(() -> {
+            // User ID, Date, Time
+            try (PreparedStatement stmt = con.prepareStatement("INSERT INTO DailyUsage Values(?,?,?))")) {
+                stmt.setInt(1,info.getUserId());
+                stmt.setString(2,info.getDate().toString());
+                stmt.setInt(3,info.getTimeSpent());
+            } catch(SQLException e) {
+                throw new RuntimeException(e);
+            }
+        });
+    }
+
+    /**
+     * Retrieves all usage tracking records for a specific user.
+     *
+     * @param user The {@link UserInfo} object representing the user.
+     * @return A list of {@link ProcessInfo} objects with usage time for each tracked process.
+     */
+    public ArrayList<DailyUsageInfo> getDailyUsage(UserInfo user) {
+        ArrayList<DailyUsageInfo> resArray = new ArrayList<>();
+        try (PreparedStatement checkQuery = con.prepareStatement(
+                "SELECT * FROM DailyUsage WHERE USER_ID = ?")) {
+            checkQuery.setInt(1, user.getId()-1);
+            try (ResultSet rs = checkQuery.executeQuery()) {
+                while (rs.next()) {
+                    String date = rs.getString("DATE");
+                    int time = rs.getInt("TIME");
+
+                    DailyUsageInfo dailyInfo = new DailyUsageInfo(date,time);
+                    resArray.add(dailyInfo);
+                }
+            }
+        } catch (SQLException e) {
+            Logger.error("Error retrieving usage tracking: " + e.getMessage());
+            throw new RuntimeException(e);
+        }
+        return resArray;
+    }
+
+    
 }

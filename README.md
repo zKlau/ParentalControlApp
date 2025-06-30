@@ -11,7 +11,6 @@
 - [x] User interface
 - [ ] Allow admin to connect remotely to the system
 - [x] Lock system after x hour
-- [ ] Lock system after n hours screen time
 - [x] Show app in system tray
 - [x] Run at startup without requiring admin password
 - [x] Admin password required to change settings or to close the app
