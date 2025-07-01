@@ -1,22 +1,29 @@
 package GUI;
 
+import java.awt.Image;
+import java.awt.MenuItem;
+import java.awt.PopupMenu;
+import java.awt.SystemTray;
+import java.awt.Toolkit;
+import java.awt.TrayIcon;
+import java.io.IOException;
+import java.net.URL;
+
+import org.tinylog.Logger;
+
 import GUI.Controller.PasswordController;
 import Processes.ProcessInfo;
 import Processes.Program;
 import javafx.application.Application;
 import javafx.application.Platform;
 import javafx.fxml.FXML;
+import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
-import javafx.fxml.FXMLLoader;
 import javafx.scene.layout.Region;
 import javafx.scene.paint.Color;
 import javafx.stage.Stage;
 import javafx.stage.StageStyle;
-import org.tinylog.Logger;
-import java.awt.*;
-import java.io.IOException;
-import java.net.URL;
 
 /**
  * The {@code MainUI} class serves as the main entry point for the ParentalControlApp.
@@ -56,9 +63,7 @@ public class MainUI extends Application {
 
 @Override
 public void init() throws Exception {
-    // This runs before start() and before any GUI is shown
     this.program = new Program();
-    // You can do other setup here
 }
     /**
      * Starts the JavaFX application by loading the primary FXML file, initializing

@@ -12,8 +12,9 @@
 - [ ] Allow admin to connect remotely to the system
 - [x] Lock system after x hour
 - [x] Show app in system tray
-- [x] Run at startup without requiring admin password
+- [x] Run at startup without requiring admin password (does not allow modifications without the password)
 - [x] Admin password required to change settings or to close the app
+- [x] Dashboard showing the most used processes and daily use time
 
 ## Setup
 

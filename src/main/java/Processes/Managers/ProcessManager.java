@@ -17,12 +17,12 @@ public class ProcessManager {
     
     private static final Set<String> WINDOWS_SYSTEM_PROCESSES = Set.of(
             "System Idle Process", "System", "smss.exe", "csrss.exe", "wininit.exe", "services.exe",
-            "lsass.exe", "svchost.exe", "winlogon.exe", "explorer.exe", "spoolsv.exe", "dwm.exe",
+            "lsass.exe", "winlogon.exe", "explorer.exe", "spoolsv.exe", "dwm.exe",
             "taskhostw.exe", "fontdrvhost.exe", "registry", "conhost.exe", "rundll32.exe", "audiodg.exe",
             "WmiPrvSE.exe", "SearchIndexer.exe", "SearchUI.exe", "RuntimeBroker.exe", "SgrmBroker.exe",
             "StartMenuExperienceHost.exe", "ShellExperienceHost.exe", "SecurityHealthSystray.exe",
             "msmpeng.exe", "NisSrv.exe", "ctfmon.exe", "sihost.exe", "backgroundTaskHost.exe",
-            "AppVShNotify.exe", "AppVClient.exe"
+            "AppVShNotify.exe", "AppVClient.exe", "Image", "Secure", "Registry", "Memory"
     );
 
     public ProcessManager(Database db) {
@@ -41,7 +41,7 @@ public class ProcessManager {
                 String[] parts = line.split(" ");
                 String processName = parts[0];
 
-                if (WINDOWS_SYSTEM_PROCESSES.contains(processName) || processName.contains(".exe") || processName.contains(".msi")) {
+                if (WINDOWS_SYSTEM_PROCESSES.contains(processName) || !processName.contains(".exe")) {
                     continue;
                 }
 

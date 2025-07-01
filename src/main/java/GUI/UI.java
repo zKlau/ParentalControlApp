@@ -5,10 +5,13 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
 
+import org.tinylog.Logger;
+
 import Events.EventInfo;
 import GUI.Controller.CreateUserController;
 import GUI.Controller.eventEditController;
 import GUI.Controller.processEditController;
+import Processes.Managers.UsageManager;
 import Processes.ProcessInfo;
 import Processes.Program;
 import Processes.UserInfo;
@@ -18,6 +21,7 @@ import javafx.fxml.FXMLLoader;
 import javafx.geometry.Rectangle2D;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
+import javafx.scene.chart.LineChart;
 import javafx.scene.chart.PieChart;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
@@ -25,11 +29,12 @@ import javafx.scene.control.ListCell;
 import javafx.scene.control.ListView;
 import javafx.scene.control.MenuButton;
 import javafx.scene.control.MenuItem;
+import javafx.scene.control.Tooltip;
+import javafx.scene.image.Image;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.HBox;
 import javafx.stage.Screen;
 import javafx.stage.Stage;
-import org.tinylog.Logger;
 
 /**
  * The {@code UI} class is responsible for managing the graphical user interface logic of the application.
@@ -87,7 +92,9 @@ public class UI {
         this.primaryStage = (Stage) processes.getScene().getWindow();
         this.program = program;
         this.program.ui = this;
-
+        primaryStage.getIcons().add(
+            new Image(getClass().getResourceAsStream("/Images/icon.png"))
+        );
         ArrayList<UserInfo> users = program.db.getUsers();
         if (!users.isEmpty()) {
             populateUsersMenu(users);
@@ -369,11 +376,13 @@ public class UI {
 
     @FXML
     public PieChart pieChart1;
+    @FXML
+    public LineChart dailyHoursChart;
 
     public void updateDashboard() {
             pieChart1.getData().clear();
-            pieChart1.setTitle("Processes by TIME");
-            ArrayList<ProcessInfo> processes = program.db.getUsageTracking(program.user);
+            pieChart1.setTitle("TOP 10 processes by TIME");
+            ArrayList<ProcessInfo> processes = program.db.getUsageTrackingTopTen(program.user);
             pieChart1.getData().clear();
             if (processes.isEmpty()) {
                 Logger.warn("No processes found for user " + program.user.getName());
@@ -384,6 +393,8 @@ public class UI {
                     pieChart1.getData().add(data);
                 }
             }
+
+        UsageManager.displayDailyUsage(dailyHoursChart, program.db.getDailyUsage(program.user));
     }
 
     /**

@@ -114,7 +114,7 @@ public class Program {
             public void run() {
                 try {
                     for (EventInfo event : db.getEvents(current_user)) {
-                        Logger.info(event.toString());
+                        //Logger.info(event.toString());
                         eventManager.runEvent(event);
                     }
 

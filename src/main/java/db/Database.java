@@ -11,6 +11,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Base64;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
@@ -267,6 +268,34 @@ public class Database {
         }
     }
 
+    /**
+     * Retrieves all usage tracking records for a specific user.
+     *
+     * @param user The {@link UserInfo} object representing the user.
+     * @return A list of {@link ProcessInfo} objects with usage time for each tracked process.
+     */
+    public ArrayList<ProcessInfo> getUsageTrackingTopTen(UserInfo user) {
+        ArrayList<ProcessInfo> resArray = new ArrayList<>();
+        try (PreparedStatement checkQuery = con.prepareStatement(
+                "SELECT * FROM UsageTracking WHERE USER_ID = ? AND NOT name = 'svchost.exe' ORDER BY TIME DESC LIMIT 10")) {
+            checkQuery.setInt(1, user.getId()-1);
+            try (ResultSet rs = checkQuery.executeQuery()) {
+                while (rs.next()) {
+                    int id = rs.getInt("ID");
+                    int userId = rs.getInt("USER_ID");
+                    String processName = rs.getString("NAME");
+                    int time = rs.getInt("TIME");
+                    ProcessInfo processInfo = new ProcessInfo(id, userId, processName, 0, 0);
+                    processInfo.setTotal_time(time);
+                    resArray.add(processInfo);
+                }
+            }
+        } catch (SQLException e) {
+            Logger.error("Error retrieving usage tracking: " + e.getMessage());
+            throw new RuntimeException(e);
+        }
+        return resArray;
+    }
     /**
      * Retrieves all usage tracking records for a specific user.
      *
@@ -743,6 +772,55 @@ public class Database {
     }
 
     /**
+     * Updates an existing event in the database.
+     * This operation is performed asynchronously.
+     *Add commentMore actions
+     * @param evt The {@link EventInfo} object containing updated event data.
+     */
+    public void updateEvent(EventInfo evt) {
+        executeDatabaseTask(() -> {
+            try (PreparedStatement stmt = con.prepareStatement(
+                    "UPDATE Events SET EVENT_NAME = ?, TIME = ?,BEFORE_AT = ?, REPEAT = ? WHERE ID = ?")) {
+                stmt.setString(1, evt.getEvent_name());
+                stmt.setInt(2, evt.getTime());
+                stmt.setInt(4, evt.isRepeat() ? 1 : 0);
+                stmt.setInt(3, evt.isBefore_at() ? 1 : 0);
+                stmt.setInt(5, evt.getId());
+                stmt.executeUpdate();
+                Logger.info("Event updated: " + evt.getEvent_name());
+            } catch (SQLException e) {
+                Logger.error("Error updating Event: " + e.getMessage());
+                throw new RuntimeException(e);
+            }
+        });
+    }
+    /**
+     * Checks the admin password against the stored hash, or sets it if not present.
+     *
+     * @param pass The password to check or set.
+     * @return {@code true} if the password is correct or was set, {@code false} otherwise.
+     */
+    public boolean checkPassword(String pass) {
+        try (PreparedStatement stmt = con.prepareStatement("SELECT * FROM ADMIN")) {
+            ResultSet rs = stmt.executeQuery();
+            if (rs.next()) {
+                String storedEncoded = rs.getString("PASSWORD");
+                byte[] combined = Base64.getDecoder().decode(storedEncoded);
+                HashedPassword stored = HashedPassword.fromBytes(combined);
+                KeySpec spec = new PBEKeySpec(pass.toCharArray(), stored.getSalt(), 65536, 128);
+                SecretKeyFactory f = SecretKeyFactory.getInstance("PBKDF2WithHmacSHA1");
+                byte[] computedHash = f.generateSecret(spec).getEncoded();
+                return Arrays.equals(stored.getHash(), computedHash);
+            } else {
+                addPassword(pass);
+                return true;
+            }
+        } catch (SQLException | NoSuchAlgorithmException | InvalidKeySpecException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    /**
      * Hashes a password using PBKDF2 with a random salt.
      *
      * @param pass The password to hash.
@@ -792,10 +870,11 @@ public class Database {
     public synchronized void addDailyUsage(DailyUsageInfo info) {
         executeDatabaseTask(() -> {
             // User ID, Date, Time
-            try (PreparedStatement stmt = con.prepareStatement("INSERT INTO DailyUsage Values(?,?,?))")) {
+            try (PreparedStatement stmt = con.prepareStatement("INSERT INTO DailyUsage(USER_ID,DATE,USAGE_SECONDS) VALUES(?,?,?)")) {
                 stmt.setInt(1,info.getUserId());
                 stmt.setString(2,info.getDate().toString());
                 stmt.setInt(3,info.getTimeSpent());
+                stmt.executeUpdate();
             } catch(SQLException e) {
                 throw new RuntimeException(e);
             }
@@ -810,22 +889,23 @@ public class Database {
      */
     public ArrayList<DailyUsageInfo> getDailyUsage(UserInfo user) {
         ArrayList<DailyUsageInfo> resArray = new ArrayList<>();
-        try (PreparedStatement checkQuery = con.prepareStatement(
-                "SELECT * FROM DailyUsage WHERE USER_ID = ?")) {
-            checkQuery.setInt(1, user.getId()-1);
-            try (ResultSet rs = checkQuery.executeQuery()) {
-                while (rs.next()) {
-                    String date = rs.getString("DATE");
-                    int time = rs.getInt("TIME");
+            try (PreparedStatement checkQuery = con.prepareStatement(
+                    "SELECT * FROM DailyUsage WHERE USER_ID = ?")) {
+                checkQuery.setInt(1, user.getId());
+                try (ResultSet rs = checkQuery.executeQuery()) {
+                    while (rs.next()) {
+                        String date = rs.getString("DATE");
+                        int time = rs.getInt("USAGE_SECONDS");
 
-                    DailyUsageInfo dailyInfo = new DailyUsageInfo(date,time);
-                    resArray.add(dailyInfo);
+                        DailyUsageInfo dailyInfo = new DailyUsageInfo(date, time);
+                        resArray.add(dailyInfo);
+                    }
                 }
+            } catch (SQLException e) {
+                Logger.error("Error retrieving usage tracking: " + e.getMessage());
+                throw new RuntimeException(e);
             }
-        } catch (SQLException e) {
-            Logger.error("Error retrieving usage tracking: " + e.getMessage());
-            throw new RuntimeException(e);
-        }
+
         return resArray;
     }
 
