@@ -6,6 +6,7 @@ import java.util.TimerTask;
 
 import Processes.Managers.EventManager;
 import Processes.Managers.ProcessManager;
+import Processes.Managers.UsageManager;
 import org.tinylog.Logger;
 
 import Events.EventInfo;
@@ -36,6 +37,7 @@ public class Program {
 
     private static final ProcessManager processManager = new ProcessManager(db);
     private static final EventManager eventManager = new EventManager(db);
+    private static final UsageManager usageManager = new UsageManager(db);
 
     /**
      * Indicates whether connections are allowed (used for UI state).
@@ -107,6 +109,7 @@ public class Program {
      * Starts the periodic monitoring timer
     */
     public void mainLoop() {
+        usageManager.dailyUsage(user);
         Timer timer = new Timer(true);
         Logger.info("Application starting!");
         timer.scheduleAtFixedRate(new TimerTask() {
