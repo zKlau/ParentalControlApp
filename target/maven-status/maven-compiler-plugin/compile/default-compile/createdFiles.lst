@@ -8,5 +8,4 @@ GUI\UI$1.class
 Events\EventInfo.class
 Events\Notification.class
 Processes\Program$1.class
-GUI\eventEditController.class
 Processes\UserInfo.class

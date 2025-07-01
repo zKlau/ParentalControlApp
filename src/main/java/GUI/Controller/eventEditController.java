@@ -1,15 +1,12 @@
-package GUI;
+package GUI.Controller;
 
 import Events.EventInfo;
-import Processes.ProcessInfo;
 import Processes.Program;
 import javafx.fxml.FXML;
 import javafx.scene.Group;
 import javafx.scene.control.*;
-import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 
-import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
 

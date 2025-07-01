@@ -11,7 +11,6 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Base64;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
@@ -19,10 +18,10 @@ import java.util.concurrent.LinkedBlockingQueue;
 import javax.crypto.SecretKeyFactory;
 import javax.crypto.spec.PBEKeySpec;
 
-import Processes.DailyUsageInfo;
 import org.tinylog.Logger;
 
 import Events.EventInfo;
+import Processes.DailyUsageInfo;
 import Processes.ProcessInfo;
 import Processes.UserInfo;
 import javafx.application.Platform;
@@ -722,6 +721,13 @@ public class Database {
         return events;
     }
 
+    /**
+     * Sets the creation time for an event in the database.
+     * This operation is performed asynchronously.
+     *
+     * @param evt        The {@link EventInfo} object representing the event to update.
+     * @param created_at The new creation time to set.
+     */
     public void setEventTime(EventInfo evt, long created_at) {
         executeDatabaseTask(() -> {
             try (PreparedStatement stmt = con.prepareStatement("UPDATE Events SET CREATED_AT = ? WHERE ID = ?")) {
@@ -734,58 +740,6 @@ public class Database {
                 throw new RuntimeException(e);
             }
         });
-    }
-
-    /**
-     * Updates an existing event in the database.
-     * This operation is performed asynchronously.
-     *
-     * @param evt The {@link EventInfo} object containing updated event data.
-     */
-    public void updateEvent(EventInfo evt) {
-        executeDatabaseTask(() -> {
-            try (PreparedStatement stmt = con.prepareStatement(
-                    "UPDATE Events SET EVENT_NAME = ?, TIME = ?,BEFORE_AT = ?, REPEAT = ? WHERE ID = ?")) {
-                stmt.setString(1, evt.getEvent_name());
-                stmt.setInt(2, evt.getTime());
-                stmt.setInt(4, evt.isRepeat() ? 1 : 0);
-                stmt.setInt(3, evt.isBefore_at() ? 1 : 0);
-                stmt.setInt(5, evt.getId());
-                stmt.executeUpdate();
-                Logger.info("Event updated: " + evt.getEvent_name());
-            } catch (SQLException e) {
-                Logger.error("Error updating Event: " + e.getMessage());
-                throw new RuntimeException(e);
-            }
-        });
-    }
-
-    /**
-     * Checks the admin password against the stored hash, or sets it if not present.
-     *
-     * @param pass The password to check or set.
-     * @return {@code true} if the password is correct or was set, {@code false} otherwise.
-     */
-    public boolean checkPassword(String pass) {
-        try (PreparedStatement stmt = con.prepareStatement("SELECT * FROM ADMIN")) {
-            ResultSet rs = stmt.executeQuery();
-            if (rs.next()) {
-                String storedEncoded = rs.getString("PASSWORD");
-                byte[] combined = Base64.getDecoder().decode(storedEncoded);
-                HashedPassword stored = HashedPassword.fromBytes(combined);
-
-                KeySpec spec = new PBEKeySpec(pass.toCharArray(), stored.getSalt(), 65536, 128);
-                SecretKeyFactory f = SecretKeyFactory.getInstance("PBKDF2WithHmacSHA1");
-                byte[] computedHash = f.generateSecret(spec).getEncoded();
-
-                return Arrays.equals(stored.getHash(), computedHash);
-            } else {
-                addPassword(pass);
-                return true;
-            }
-        } catch (SQLException | NoSuchAlgorithmException | InvalidKeySpecException e) {
-            throw new RuntimeException(e);
-        }
     }
 
     /**
@@ -829,6 +783,12 @@ public class Database {
         });
     }
 
+    /**
+     * Adds a new daily usage record to the database.
+     * This operation is performed asynchronously.
+     *
+     * @param info The {@link DailyUsageInfo} object containing daily usage details.
+     */
     public synchronized void addDailyUsage(DailyUsageInfo info) {
         executeDatabaseTask(() -> {
             // User ID, Date, Time

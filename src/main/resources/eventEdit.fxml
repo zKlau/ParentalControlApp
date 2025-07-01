@@ -8,7 +8,7 @@
 <?import javafx.scene.control.TextField?>
 <?import javafx.scene.layout.AnchorPane?>
 
-<AnchorPane prefHeight="138.0" prefWidth="574.0" xmlns="http://javafx.com/javafx/23.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="GUI.eventEditController">
+<AnchorPane prefHeight="138.0" prefWidth="574.0" xmlns="http://javafx.com/javafx/23.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="GUI.Controller.eventEditController">
     <children>
         <Button id="save_process" layoutX="46.0" layoutY="102.0" mnemonicParsing="false" onAction="#saveEvent" prefHeight="17.0" prefWidth="96.0" text="Save" />
         <Button id="remove_process" layoutX="393.0" layoutY="102.0" mnemonicParsing="false" onAction="#removeEvent" prefHeight="17.0" prefWidth="96.0" text="Remove" />

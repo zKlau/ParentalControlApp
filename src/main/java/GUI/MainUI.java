@@ -1,8 +1,8 @@
 package GUI;
 
+import GUI.Controller.PasswordController;
 import Processes.ProcessInfo;
 import Processes.Program;
-import GUI.ResizeHelper;
 import javafx.application.Application;
 import javafx.application.Platform;
 import javafx.fxml.FXML;
@@ -17,7 +17,6 @@ import org.tinylog.Logger;
 import java.awt.*;
 import java.io.IOException;
 import java.net.URL;
-import java.util.Objects;
 
 /**
  * The {@code MainUI} class serves as the main entry point for the ParentalControlApp.

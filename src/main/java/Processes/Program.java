@@ -1,23 +1,11 @@
 package Processes;
 
-import java.awt.AWTException;
-import java.awt.Dimension;
-import java.awt.Rectangle;
-import java.awt.Robot;
-import java.awt.Toolkit;
-import java.awt.image.BufferedImage;
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStreamReader;
 import java.util.ArrayList;
-import java.util.Calendar;
-import java.util.Set;
 import java.util.Timer;
 import java.util.TimerTask;
 
-import javax.imageio.ImageIO;
-
+import Processes.Managers.EventManager;
+import Processes.Managers.ProcessManager;
 import org.tinylog.Logger;
 
 import Events.EventInfo;
@@ -46,6 +34,9 @@ public class Program {
      */
     public static Database db = Database.getInstance();
 
+    private static final ProcessManager processManager = new ProcessManager(db);
+    private static final EventManager eventManager = new EventManager(db);
+
     /**
      * Indicates whether connections are allowed (used for UI state).
      */
@@ -73,15 +64,7 @@ public class Program {
 
 
 
-    private static final Set<String> WINDOWS_SYSTEM_PROCESSES = Set.of(
-    "System Idle Process", "System", "smss.exe", "csrss.exe", "wininit.exe", "services.exe",
-    "lsass.exe", "svchost.exe", "winlogon.exe", "explorer.exe", "spoolsv.exe", "dwm.exe",
-    "taskhostw.exe", "fontdrvhost.exe", "registry", "conhost.exe", "rundll32.exe", "audiodg.exe",
-    "WmiPrvSE.exe", "SearchIndexer.exe", "SearchUI.exe", "RuntimeBroker.exe", "SgrmBroker.exe",
-    "StartMenuExperienceHost.exe", "ShellExperienceHost.exe", "SecurityHealthSystray.exe",
-    "msmpeng.exe", "NisSrv.exe", "ctfmon.exe", "sihost.exe", "backgroundTaskHost.exe",
-    "AppVShNotify.exe", "AppVClient.exe"
-);
+    
 
 
     /**
@@ -131,15 +114,16 @@ public class Program {
             public void run() {
                 try {
                     for (EventInfo event : db.getEvents(current_user)) {
-                        runEvent(event);
+                        Logger.info(event.toString());
+                        eventManager.runEvent(event);
                     }
 
                     for (var i : db.getProcesses(current_user))
-                        if (isProcessRunning(i.getProcess_name())) {
+                        if (processManager.isProcessRunning(i.getProcess_name())) {
                             db.updateTime(i.getId());
                             int time_limit = db.getTimeLimit(i.getId());
                             if (time_limit > 0 && db.getTime(i.getId()) > time_limit) {
-                                terminateProcess(i.getProcess_name());
+                                processManager.terminateProcess(i.getProcess_name());
                             }
                         }
                 } catch (Exception e) {
@@ -152,241 +136,11 @@ public class Program {
         }, 0, 3000);
         new Thread( () -> {
             try {
-                    trackAllProcesses();
+                    processManager.trackAllProcesses(current_user);
                     Thread.sleep(6000);
                 } catch (Exception e) {
-                    System.err.println("Error during process tracking: " + e.getMessage());
+                    Logger.error("Error during process tracking: " + e.getMessage());
                 }
         }).start();
-    }
-
-
-
-    public void trackAllProcesses() {
-        try {
-        BufferedReader prs = getRunningProcesses();
-        String line;
-        while ((line = prs.readLine()) != null) {
-            String[] parts = line.split(" ");
-            String processName = parts[0];
-
-            if (WINDOWS_SYSTEM_PROCESSES.contains(processName) || processName.contains(".exe") || processName.contains(".msi")) {
-                continue;
-            }
-
-           // System.out.println(processName);
-
-            ProcessInfo pr = new ProcessInfo(0, current_user, processName, 0);
-            if (!db.isUsageTracked(pr)) {
-                db.addUsageTime(pr);
-                Logger.info("Tracking new process: " + processName);
-            } else {
-                //System.out.println("Already Tracking");
-                db.updateUsageTime(pr);
-            }
-        }
-    } catch (IOException e) {
-        throw new RuntimeException(e);
-    }
-    }
-    /**
-     * Executes the specified {@link EventInfo} if its scheduled time has arrived.
-     * Handles shutdown, logout, and screenshot events.
-     * Removes non-repeating events after execution.
-     *
-     * @param event The event to run.
-     */
-    public static void runEvent(EventInfo event) {
-        Calendar calendar = Calendar.getInstance();
-        int currentTimeMinutes = calendar.get(Calendar.HOUR_OF_DAY) * 60 + calendar.get(Calendar.MINUTE);
-        int eventTime = event.getTime();
-        long createdAt = event.getCreated_at();
-        boolean shouldRun = false;
-
-        if (event.isBefore_at()) {
-            if (currentTimeMinutes == eventTime) {
-                shouldRun = true;
-            }
-        } else {
-            long minutesSinceCreation = (System.currentTimeMillis() / 60000L)- createdAt;
-            if (minutesSinceCreation >= eventTime) {
-                shouldRun = true;
-            }
-        }
-
-        if (shouldRun) {
-            String name = event.getEvent_name();
-            switch (name) {
-                case "Computer Shutdown":
-                    Logger.info("Trigger: Computer Shutdown");
-                    shutdownComputer();
-                    break;
-                case "User System logout":
-                    Logger.info("Trigger: User System logout");
-                    logoutUser();
-                    break;
-                case "Screenshot":
-                    Logger.info("Trigger: Screenshot");
-                    takeScreenshot();
-                    break;
-                default:
-                    Logger.info("Unknown event: " + name);
-                    break;
-            }
-            if (!event.isRepeat()) {
-                db.removeEvent(event);
-            } else {
-               if (!event.isBefore_at()) {
-                    db.setEventTime(event, System.currentTimeMillis() / 60000L);
-               }
-            }
-        }
-    }
-
-
-    /**
-     * Shuts down the computer immediately.
-     */
-    private static void shutdownComputer() {
-        try {
-            Runtime.getRuntime().exec("shutdown -s -t 0");
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-    }
-
-    /**
-     * Logs out the current user.
-     */
-    private static void logoutUser() {
-        try {
-            Runtime.getRuntime().exec("shutdown -l");
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-    }
-
-    /**
-     * Takes a screenshot of the entire screen and saves it to the /Screenshots directory.
-     */
-    private static void takeScreenshot() {
-    try {
-        Robot r = new Robot();
-        String dirPath = "Screenshots";
-        File dir = new File(dirPath);
-        if (!dir.exists()) {
-            dir.mkdirs();
-        }
-        String path = dirPath + File.separator + System.currentTimeMillis() + ".jpg";
-        Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
-        Rectangle capture = new Rectangle(screenSize.width, screenSize.height);
-        BufferedImage image = r.createScreenCapture(capture);
-        ImageIO.write(image, "jpg", new File(path));
-    } catch (AWTException | IOException e) {
-        e.printStackTrace();
-    }
-}
-    public static BufferedReader getRunningProcesses() {
-        try {
-            Process process = Runtime.getRuntime().exec("tasklist");
-
-            return new BufferedReader(new InputStreamReader(process.getInputStream()));
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-    }
-
-    /**
-     * Returns a list of running processes whose names match or contain the given name.
-     *
-     * @param pname The process name to search for.
-     * @return A list of matching process names.
-     */
-    public static ArrayList<String> getRunningProcessesByName(String pname) {
-        ArrayList<String> processes = new ArrayList<>();
-        try {
-            BufferedReader buffer = getRunningProcesses();
-
-            String line;
-
-            while ((line = buffer.readLine()) != null) {
-                if (line.toLowerCase().startsWith(pname.toLowerCase()) || line.toLowerCase().contains(pname.toLowerCase())) {
-                    processes.add(line.split(" ")[0]);
-                }
-            }
-
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-        return processes;
-    }
-
-
-
-        /**
-     * Checks if a process with the given name is currently running.
-     *
-     * @param pname The process name to check.
-     * @return {@code true} if the process is running, {@code false} otherwise.
-     */
-    public static boolean isProcessRunning(String pname) {
-        try {
-           BufferedReader buffer = getRunningProcesses();
-
-            String line;
-
-            while ((line = buffer.readLine()) != null) {
-                if (line.toLowerCase().startsWith(pname.toLowerCase()) || line.toLowerCase().contains(pname.toLowerCase())) {
-                    return true;
-                }
-            }
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-
-        return false;
-    }
-
-    /**
-     * Terminates all running processes that match the given name.
-     *
-     * @param pname The process name to terminate.
-     */
-    public static void terminateProcess(String pname) {
-        try {
-            ArrayList<String> processes = getRunningProcessesByName(pname);
-
-            for (String process : processes) {
-                Process prs = Runtime.getRuntime().exec("taskkill /F /IM " + process);
-                prs.waitFor();
-            }
-            /*
-            Process process = Runtime.getRuntime().exec("taskkill /F /IM " + pname);
-            process.waitFor();
-               */
-            Logger.info("Process: " + pname + " terminated");
-        } catch (InterruptedException e) {
-            throw new RuntimeException(e);
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-    }
-
-    public void addDailyUsage() {
-        Calendar calendar = Calendar.getInstance();
-        int currentDay = calendar.get(Calendar.DAY_OF_MONTH);
-        int currentMonth = calendar.get(Calendar.MONTH) + 1;
-        int currentYear = calendar.get(Calendar.YEAR);
-        String date = String.format("%02d-%02d-%04d", currentDay, currentMonth, currentYear);
-
-        db.getUsageTracking(user).forEach(processInfo -> {
-            if(processInfo.getProcess_name().equals("svchost.exe")) {
-                DailyUsageInfo info = new DailyUsageInfo(user.getId(),date,processInfo.getTotal_time());
-                db.addDailyUsage(info);
-            }
-        });
-    };
-    public void checkDailyUsage() {
-
     }
 }

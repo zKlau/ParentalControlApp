@@ -6,6 +6,9 @@ import java.io.InputStreamReader;
 import java.util.ArrayList;
 
 import Events.EventInfo;
+import GUI.Controller.CreateUserController;
+import GUI.Controller.eventEditController;
+import GUI.Controller.processEditController;
 import Processes.ProcessInfo;
 import Processes.Program;
 import Processes.UserInfo;
@@ -15,7 +18,6 @@ import javafx.fxml.FXMLLoader;
 import javafx.geometry.Rectangle2D;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
-import javafx.scene.chart.LineChart;
 import javafx.scene.chart.PieChart;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;

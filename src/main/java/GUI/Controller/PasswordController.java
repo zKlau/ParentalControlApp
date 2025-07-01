@@ -1,7 +1,8 @@
-package GUI;
+package GUI.Controller;
 
 import java.awt.SystemTray;
 
+import GUI.MainUI;
 import org.tinylog.Logger;
 
 import javafx.application.Platform;

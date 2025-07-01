@@ -1,6 +1,5 @@
-package GUI;
+package GUI.Controller;
 
-import Events.EventInfo;
 import Processes.ProcessInfo;
 import Processes.Program;
 import javafx.fxml.FXML;
@@ -11,8 +10,6 @@ import javafx.stage.Stage;
 import org.tinylog.Logger;
 
 import java.io.File;
-import java.util.ArrayList;
-import java.util.Arrays;
 
 /**
  * The {@code processEditController} class manages the editing and creation of processes
