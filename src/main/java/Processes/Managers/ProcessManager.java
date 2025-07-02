@@ -44,16 +44,15 @@ public class ProcessManager {
                 if (WINDOWS_SYSTEM_PROCESSES.contains(processName) || !processName.contains(".exe")) {
                     continue;
                 }
-
-                // System.out.println(processName);
-
                 ProcessInfo pr = new ProcessInfo(0, current_user, processName, 0);
                 if (!db.isUsageTracked(pr)) {
                     db.addUsageTime(pr);
+                    db.updateUsageTime(pr);
                     Logger.info("Tracking new process: " + processName);
                 } else {
                     //System.out.println("Already Tracking");
                     db.updateUsageTime(pr);
+                    //Logger.info("Updating process time: " + processName);
                 }
             }
         } catch (IOException e) {
@@ -69,7 +68,6 @@ public class ProcessManager {
     public static BufferedReader getRunningProcesses() {
         try {
             Process process = Runtime.getRuntime().exec("tasklist");
-
             return new BufferedReader(new InputStreamReader(process.getInputStream()));
         } catch (IOException e) {
             throw new RuntimeException(e);

@@ -102,6 +102,7 @@ public class UI {
             program.allow_connection = true;
             program.user = users.getFirst();
             program.current_user = program.user.getId() - 1;
+
             currentUser.setText("Current user: " + program.user.getName() + " (" + program.user.getId() + ")");
         } else {
             createUserWindow();
@@ -362,6 +363,8 @@ public class UI {
             item.setOnAction(e -> {
                 program.webFilter.unblockSites(program.db.getURLS(program.user));
                 program.current_user = user.getId() - 1;
+                Logger.info("Selected user " + program.current_user);
+                program.usageManager.dailyUsage(user);
                 program.user = user;
                 currentUser.setText("Current user: " + user.getName() + " (" + user.getId() + ")" );
                 updateMenu();

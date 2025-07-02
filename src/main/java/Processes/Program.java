@@ -4,13 +4,13 @@ import java.util.ArrayList;
 import java.util.Timer;
 import java.util.TimerTask;
 
-import Processes.Managers.EventManager;
-import Processes.Managers.ProcessManager;
-import Processes.Managers.UsageManager;
 import org.tinylog.Logger;
 
 import Events.EventInfo;
 import GUI.UI;
+import Processes.Managers.EventManager;
+import Processes.Managers.ProcessManager;
+import Processes.Managers.UsageManager;
 import db.Database;
 
 /**
@@ -37,7 +37,7 @@ public class Program {
 
     private static final ProcessManager processManager = new ProcessManager(db);
     private static final EventManager eventManager = new EventManager(db);
-    private static final UsageManager usageManager = new UsageManager(db);
+    public static final UsageManager usageManager = new UsageManager(db);
 
     /**
      * Indicates whether connections are allowed (used for UI state).
@@ -104,7 +104,6 @@ public class Program {
             mainLoop();
         }
     }
-
     /**
      * Starts the periodic monitoring timer
     */
@@ -138,12 +137,17 @@ public class Program {
             }
         }, 0, 3000);
         new Thread( () -> {
-            try {
+            while (!Thread.currentThread().isInterrupted()) {
+                try {
                     processManager.trackAllProcesses(current_user);
                     Thread.sleep(6000);
+                } catch (InterruptedException e) {
+                    Logger.info("Tracking thread interrupted");
+                    break;
                 } catch (Exception e) {
                     Logger.error("Error during process tracking: " + e.getMessage());
                 }
+            }
         }).start();
     }
 }

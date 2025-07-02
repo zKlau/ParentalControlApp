@@ -44,7 +44,6 @@ public class UsageManager {
                     break;
                 }
             }
-
             int previousTotal = dailyUsages.stream().mapToInt(info -> info.getTimeSpent()).sum();
             int todayTime = svchostTotal - previousTotal;
             if (todayTime < 0) {

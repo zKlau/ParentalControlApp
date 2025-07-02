@@ -238,7 +238,7 @@ public class Database {
     public void updateUsageTime(ProcessInfo prs) {
         executeDatabaseTask(() -> {
             try (PreparedStatement stmt = con.prepareStatement(
-                    "UPDATE UsageTracking SET TIME=TIME+2 WHERE USER_ID = ? and NAME = ?")) {
+                    "UPDATE UsageTracking SET TIME=TIME+6 WHERE USER_ID = ? and NAME = ?")) {
                 stmt.setInt(1, prs.getUser_id());
                 stmt.setString(2, prs.getProcess_name());
                 stmt.executeUpdate();
@@ -256,17 +256,18 @@ public class Database {
      * @return {@code true} if the process is tracked, {@code false} otherwise.
      */
     public boolean isUsageTracked(ProcessInfo prs) {
-        try (PreparedStatement checkStmt = con.prepareStatement(
-                "SELECT * FROM UsageTracking WHERE NAME = ? AND USER_ID = ?")) {
-            checkStmt.setString(1, prs.getProcess_name());
-            checkStmt.setInt(2, prs.getUser_id());
-            try (ResultSet rs = checkStmt.executeQuery()) {
-                return rs.next();
-            }
-        } catch (SQLException e) {
-            throw new RuntimeException(e);
+    try (PreparedStatement checkStmt = con.prepareStatement(
+            "SELECT * FROM UsageTracking WHERE NAME = ? AND USER_ID = ?")) {
+        checkStmt.setString(1, prs.getProcess_name());
+        checkStmt.setInt(2, prs.getUser_id());
+        try (ResultSet rs = checkStmt.executeQuery()) {
+            boolean found = rs.next();
+            return found;
         }
+    } catch (SQLException e) {
+        throw new RuntimeException(e);
     }
+}
 
     /**
      * Retrieves all usage tracking records for a specific user.
