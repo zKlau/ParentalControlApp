@@ -45,13 +45,13 @@ public class ProcessManager {
                     continue;
                 }
                 ProcessInfo pr = new ProcessInfo(0, current_user, processName, 0);
-                if (!db.isUsageTracked(pr)) {
-                    db.addUsageTime(pr);
-                    db.updateUsageTime(pr);
+                if (!db.usageTrackingRepository.isUsageTracked(pr)) {
+                    db.usageTrackingRepository.addUsageTime(pr);
+                    db.usageTrackingRepository.updateUsageTime(pr);
                     Logger.info("Tracking new process: " + processName);
                 } else {
                     //System.out.println("Already Tracking");
-                    db.updateUsageTime(pr);
+                    db.usageTrackingRepository.updateUsageTime(pr);
                     //Logger.info("Updating process time: " + processName);
                 }
             }

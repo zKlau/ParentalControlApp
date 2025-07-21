@@ -32,12 +32,12 @@ public class UsageManager {
         int currentYear = calendar.get(Calendar.YEAR);
         String date = String.format("%04d-%02d-%02d", currentYear, currentMonth, currentDay);
 
-        var dailyUsages = db.getDailyUsage(user);
+        var dailyUsages = db.dailyUsageRepository.getDailyUsage(user);
         boolean hasToday = dailyUsages.stream().anyMatch(info -> info.getDate().toString().equals(date));
         System.out.println(hasToday);
         if (!hasToday) {
             int svchostTotal = 0;
-            ArrayList<ProcessInfo> pr = db.getUsageTracking(user);
+            ArrayList<ProcessInfo> pr = db.usageTrackingRepository.getUsageTracking(user);
             for(ProcessInfo prs : pr) {
                 if (prs.getProcess_name().contains("svchost.exe")) {
                     svchostTotal = prs.getTotal_time();
@@ -50,7 +50,7 @@ public class UsageManager {
                 todayTime = 0;
             }
 
-            db.addDailyUsage(new DailyUsageInfo(user.getId(), date, todayTime));
+            db.dailyUsageRepository.addDailyUsage(new DailyUsageInfo(user.getId(), date, todayTime));
         }
     };
     /**

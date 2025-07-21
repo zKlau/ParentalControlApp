@@ -136,11 +136,11 @@ public class processEditController {
             if (processUrl.getText().contains("www.") && processUrl.getText().contains(".com")) {
                 program.webFilter.blockSite(processUrl.getText());
             }
-            program.db.addProcess(newProcess);
+            program.db.processRepository.addProcess(newProcess);
         } else if (prs != null) {
             prs.setProcess_name(processUrl.getText());
             prs.setTime_limit(Integer.parseInt(time_limit.getText()));
-            program.db.updateProcess(prs);
+            program.db.processRepository.updateProcess(prs);
         }
         Stage stage = (Stage) processUrl.getScene().getWindow();
         stage.close();
@@ -199,7 +199,7 @@ public class processEditController {
         if (processUrl.getText().contains("www.") && processUrl.getText().contains(".com")) {
             program.webFilter.unblockSite(processUrl.getText());
         }
-        program.db.removeProcess(prs);
+        program.db.processRepository.removeProcess(prs);
         Stage stage = (Stage) processUrl.getScene().getWindow();
         stage.close();
     }

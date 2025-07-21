@@ -81,7 +81,7 @@ public void init() throws Exception {
         new Thread(() -> {
             Platform.runLater(() -> {
                 //controller.onProgramReady(program);
-                for (ProcessInfo p : program.db.getURLS(program.user)) {
+                for (ProcessInfo p : program.db.processRepository.getURLS(program.user)) {
                     program.webFilter.blockSite(p.getProcess_name());
                 };
             });
@@ -89,7 +89,7 @@ public void init() throws Exception {
 
         Runtime.getRuntime().addShutdownHook(new Thread(() -> {
             Logger.warn("Shutting down app...");
-            program.webFilter.unblockSites(program.db.getURLS(program.user));
+            program.webFilter.unblockSites(program.db.processRepository.getURLS(program.user));
         }));
         displayPIN(stage);
     }
@@ -162,7 +162,7 @@ public void init() throws Exception {
         new Thread(() -> {
             Platform.runLater(() -> {
                 controller.onProgramReady(program);
-                for (ProcessInfo p : controller.program.db.getURLS(controller.program.user)) {
+                for (ProcessInfo p : controller.program.db.processRepository.getURLS(controller.program.user)) {
                     controller.program.webFilter.blockSite(p.getProcess_name());
                 }
             });
@@ -170,7 +170,7 @@ public void init() throws Exception {
 
         Runtime.getRuntime().addShutdownHook(new Thread(() -> {
             System.out.println("Shutting down app...");
-            controller.program.webFilter.unblockSites(controller.program.db.getURLS(controller.program.user));
+            controller.program.webFilter.unblockSites(controller.program.db.processRepository.getURLS(controller.program.user));
         }));*/
     }
 

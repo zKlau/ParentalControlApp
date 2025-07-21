@@ -74,7 +74,7 @@ public class Program {
      * @return user selection status
      */
     public boolean setUser() {
-        ArrayList<UserInfo> u = db.getUsers();
+        ArrayList<UserInfo> u = db.userRepository.getUsers();
         if(u.size() > 0) {
             user = u.get(0);
             return true;
@@ -115,16 +115,16 @@ public class Program {
             @Override
             public void run() {
                 try {
-                    for (EventInfo event : db.getEvents(current_user)) {
+                    for (EventInfo event : db.eventRepository.getEvents(current_user)) {
                         //Logger.info(event.toString());
                         eventManager.runEvent(event);
                     }
 
-                    for (var i : db.getProcesses(current_user))
+                    for (var i : db.processRepository.getProcesses(current_user))
                         if (processManager.isProcessRunning(i.getProcess_name())) {
-                            db.updateTime(i.getId());
-                            int time_limit = db.getTimeLimit(i.getId());
-                            if (time_limit > 0 && db.getTime(i.getId()) > time_limit) {
+                            db.processRepository.updateTime(i.getId());
+                            int time_limit = db.processRepository.getTimeLimit(i.getId());
+                            if (time_limit > 0 && db.processRepository.getTime(i.getId()) > time_limit) {
                                 processManager.terminateProcess(i.getProcess_name());
                             }
                         }

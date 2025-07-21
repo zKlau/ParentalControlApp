@@ -12,7 +12,7 @@ public class Main {
         UserInfo usr1 = new UserInfo("name",1);
         usage.dailyUsage(usr1);
 
-        for(DailyUsageInfo f : db.getDailyUsage(usr1)) {
+        for(DailyUsageInfo f : db.dailyUsageRepository.getDailyUsage(usr1)) {
             System.out.println(f.getDate());
         };
 

@@ -29,7 +29,6 @@ import javafx.scene.control.ListCell;
 import javafx.scene.control.ListView;
 import javafx.scene.control.MenuButton;
 import javafx.scene.control.MenuItem;
-import javafx.scene.control.Tooltip;
 import javafx.scene.image.Image;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.HBox;
@@ -95,7 +94,7 @@ public class UI {
         primaryStage.getIcons().add(
             new Image(getClass().getResourceAsStream("/Images/icon.png"))
         );
-        ArrayList<UserInfo> users = program.db.getUsers();
+        ArrayList<UserInfo> users = program.db.userRepository.getUsers();
         if (!users.isEmpty()) {
             populateUsersMenu(users);
             populateProgramList(users.getFirst());
@@ -214,7 +213,7 @@ public class UI {
      */
     public void populateProgramList(UserInfo user) {
         int user_id = user.getId() - 1;
-        ArrayList<ProcessInfo> prs = program.db.getProcesses(user_id);
+        ArrayList<ProcessInfo> prs = program.db.processRepository.getProcesses(user_id);
         processes.getItems().setAll(prs);
         processes.setCellFactory(listView -> new ListCell<>() {
             private final Button btn = new Button("EDIT");
@@ -238,7 +237,7 @@ public class UI {
             }
         });
 
-        ArrayList<EventInfo> evts = program.db.getEvents(user_id);
+        ArrayList<EventInfo> evts = program.db.eventRepository.getEvents(user_id);
         events.getItems().setAll(evts);
         events.setCellFactory(listView -> new ListCell<>() {
             private final Button btn = new Button("EDIT");
@@ -354,21 +353,21 @@ public class UI {
      */
     public void populateUsersMenu(ArrayList<UserInfo> users) {
         if (users == null) {
-            users = program.db.getUsers();
+            users = program.db.userRepository.getUsers();
         }
         selectUsers.getItems().clear();
 
         for (UserInfo user : users) {
             MenuItem item = new MenuItem(user.getName());
             item.setOnAction(e -> {
-                program.webFilter.unblockSites(program.db.getURLS(program.user));
+                program.webFilter.unblockSites(program.db.processRepository.getURLS(program.user));
                 program.current_user = user.getId() - 1;
                 Logger.info("Selected user " + program.current_user);
                 program.usageManager.dailyUsage(user);
                 program.user = user;
                 currentUser.setText("Current user: " + user.getName() + " (" + user.getId() + ")" );
                 updateMenu();
-                for(ProcessInfo p : program.db.getURLS(program.user)) {
+                for(ProcessInfo p : program.db.processRepository.getURLS(program.user)) {
                     program.webFilter.blockSite(p.getProcess_name());
                 }
             });
@@ -385,7 +384,7 @@ public class UI {
     public void updateDashboard() {
             pieChart1.getData().clear();
             pieChart1.setTitle("TOP 10 processes by TIME");
-            ArrayList<ProcessInfo> processes = program.db.getUsageTrackingTopTen(program.user);
+            ArrayList<ProcessInfo> processes = program.db.usageTrackingRepository.getUsageTrackingTopTen(program.user);
             pieChart1.getData().clear();
             if (processes.isEmpty()) {
                 Logger.warn("No processes found for user " + program.user.getName());
@@ -397,7 +396,7 @@ public class UI {
                 }
             }
 
-        UsageManager.displayDailyUsage(dailyHoursChart, program.db.getDailyUsage(program.user));
+        UsageManager.displayDailyUsage(dailyHoursChart, program.db.dailyUsageRepository.getDailyUsage(program.user));
     }
 
     /**
@@ -431,7 +430,7 @@ public class UI {
      */
     @FXML
     public void deleteUser() {
-        program.db.deleteUser(program.user);
+        program.db.userRepository.deleteUser(program.user);
         Logger.warn("Deleting user");
     }
 

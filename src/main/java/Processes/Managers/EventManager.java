@@ -70,10 +70,10 @@ public class EventManager {
                     break;
             }
             if (!event.isRepeat()) {
-                db.removeEvent(event);
+                db.eventRepository.removeEvent(event);
             } else {
                 if (!event.isBefore_at()) {
-                    db.setEventTime(event, (System.currentTimeMillis() / 60000L));
+                    db.eventRepository.setEventTime(event, (System.currentTimeMillis() / 60000L));
                 }
             }
         }

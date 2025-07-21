@@ -69,7 +69,7 @@ public class PasswordController {
     @FXML
     public void verifyPassword() {
         Logger.info("Verifying Password");
-        if (mainApp.getProgram().db.checkPassword(passwordField.getText())) {
+        if (mainApp.getProgram().db.adminRepository.checkPassword(passwordField.getText())) {
             mainApp.hidePINWindowAndShowMain();
             passwordField.setText("");
         }
@@ -149,7 +149,7 @@ public class PasswordController {
      */
     @FXML
     public void closeAppVerifyPassword() {
-        if (mainApp.getProgram().db.checkPassword(passwordField.getText())) {
+        if (mainApp.getProgram().db.adminRepository.checkPassword(passwordField.getText())) {
             passwordField.setText("");
             SystemTray.getSystemTray().remove(mainApp.trayIcon);
             Platform.exit();

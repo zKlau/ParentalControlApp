@@ -1,11 +1,9 @@
 Processes\ProcessInfo.class
 GUI\UI$2.class
-GUI\ResizeHelper.class
 Processes\WebFilter.class
 db\HashedPassword.class
 db\Database.class
 GUI\UI$1.class
 Events\EventInfo.class
-Events\Notification.class
 Processes\Program$1.class
 Processes\UserInfo.class
